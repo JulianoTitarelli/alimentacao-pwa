@@ -481,3 +481,69 @@ window.Alimentacao = Object.freeze({
 });
 
 console.info("Minha Alimentação: núcleo carregado.");
+
+/* =========================================
+   CONEXÃO INICIAL COM A INTERFACE
+========================================= */
+
+function atualizarPainel() {
+  const resumo = window.Alimentacao.obterResumo();
+
+  const elementoData = document.getElementById("dataHoje");
+  const elementoAlimentos = document.getElementById("quantidadeAlimentos");
+  const elementoPratos = document.getElementById("quantidadePratos");
+  const elementoSemanas = document.getElementById("quantidadeSemanas");
+
+  if (elementoData) {
+    elementoData.textContent = new Date().toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short"
+    });
+  }
+
+  if (elementoAlimentos) {
+    elementoAlimentos.textContent = resumo.quantidadeAlimentos;
+  }
+
+  if (elementoPratos) {
+    elementoPratos.textContent = resumo.quantidadePratos;
+  }
+
+  if (elementoSemanas) {
+    elementoSemanas.textContent = resumo.quantidadeSemanas;
+  }
+}
+
+function configurarNavegacaoInicial() {
+  document.querySelectorAll("[data-tela]").forEach(botao => {
+    botao.addEventListener("click", () => {
+      const tela = botao.dataset.tela;
+
+      if (tela === "inicio") {
+        document.getElementById("telaDinamica").hidden = true;
+
+        document.querySelectorAll(
+          "#conteudo > section:not(#telaDinamica)"
+        ).forEach(secao => {
+          secao.hidden = false;
+        });
+      } else {
+        alert(
+          "A área selecionada será ativada na próxima etapa. ♡"
+        );
+      }
+
+      document.querySelectorAll(".nav-item").forEach(item => {
+        item.classList.toggle(
+          "ativo",
+          item.dataset.tela === tela
+        );
+      });
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  atualizarPainel();
+  configurarNavegacaoInicial();
+});
