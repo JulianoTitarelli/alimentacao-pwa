@@ -1,0 +1,19 @@
+
+{
+  "id": "/alimentacao-pwa/",
+  "name": "Minha Alimentação",
+  "short_name": "Alimentação",
+  "description": "Organize seus pratos, refeições, nutrientes e mercado semanal.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDF8FF",
+  "theme_color": "#D7EFFD",
+  "categories": [
+    "food",
+    "health",
+    "lifestyle"
+  ]
+}
