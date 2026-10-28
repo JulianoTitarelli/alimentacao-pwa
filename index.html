@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#245747">
+  <meta name="description" content="Organize suas refeições, nutrientes e compras da semana.">
+  <title>Minha Alimentação</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topo">
+    <div>
+      <p class="sobretitulo">SEU ORGANIZADOR PESSOAL</p>
+      <h1>Minha alimentação</h1>
+      <p class="subtitulo">Pequenas escolhas, bons hábitos.</p>
+    </div>
+    <div class="marca" aria-hidden="true">MA</div>
+  </header>
+
+  <main>
+    <section class="resumo">
+      <div class="secao-titulo">
+        <div>
+          <p class="sobretitulo">ACOMPANHAMENTO</p>
+          <h2>Resumo do dia</h2>
+        </div>
+        <span class="data-hoje" id="dataHoje">Hoje</span>
+      </div>
+
+      <article class="calorias">
+        <p>Consumo de energia</p>
+        <div class="numero-calorias">
+          <strong id="totalKcal">0</strong>
+          <span>kcal</span>
+        </div>
+        <div class="barra">
+          <div id="barraKcal"></div>
+        </div>
+        <p class="texto-apoio" id="textoKcal">
+          Adicione alimentos para acompanhar seu consumo.
+        </p>
+      </article>
+
+      <div class="grade-nutrientes">
+        <article class="nutriente">
+          <span class="marcador proteina"></span>
+          <p>Proteínas</p>
+          <strong id="totalProteinas">0 g</strong>
+        </article>
+        <article class="nutriente">
+          <span class="marcador carboidrato"></span>
+          <p>Carboidratos</p>
+          <strong id="totalCarboidratos">0 g</strong>
+        </article>
+        <article class="nutriente">
+          <span class="marcador gordura"></span>
+          <p>Gorduras</p>
+          <strong id="totalGorduras">0 g</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="atalhos">
+      <div class="secao-titulo">
+        <div>
+          <p class="sobretitulo">ORGANIZE SUA ROTINA</p>
+          <h2>O que você precisa?</h2>
+        </div>
+      </div>
+
+      <button class="atalho" data-tela="refeicoes">
+        <span class="icone">01</span>
+        <span class="atalho-texto">
+          <strong>Minhas refeições</strong>
+          <small>Organize seu café, almoço, jantar e lanches.</small>
+        </span>
+        <span class="seta">›</span>
+      </button>
+
+      <button class="atalho" data-tela="alimentos">
+        <span class="icone">02</span>
+        <span class="atalho-texto">
+          <strong>Cadastro de alimentos</strong>
+          <small>Consulte e cadastre os valores nutricionais.</small>
+        </span>
+        <span class="seta">›</span>
+      </button>
+
+      <button class="atalho" data-tela="mercado">
+        <span class="icone">03</span>
+        <span class="atalho-texto">
+          <strong>Lista de mercado</strong>
+          <small>Calcule os ingredientes para a semana.</small>
+        </span>
+        <span class="seta">›</span>
+      </button>
+    </section>
+
+    <section class="refeicoes-hoje">
+      <div class="secao-titulo">
+        <div>
+          <p class="sobretitulo">SEU DIA</p>
+          <h2>Refeições planejadas</h2>
+        </div>
+      </div>
+      <div id="listaRefeicoes">
+        <div class="vazio">
+          <span class="vazio-icone">+</span>
+          <p>Seu planejamento começa aqui.</p>
+          <small>Em breve você poderá adicionar seus alimentos e quantidades.</small>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="navegacao" aria-label="Navegação principal">
+    <button class="nav-item ativo" data-tela="inicio">
+      <span>⌂</span>
+      <small>Início</small>
+    </button>
+    <button class="nav-item" data-tela="refeicoes">
+      <span>≡</span>
+      <small>Refeições</small>
+    </button>
+    <button class="nav-item" data-tela="alimentos">
+      <span>＋</span>
+      <small>Alimentos</small>
+    </button>
+    <button class="nav-item" data-tela="mercado">
+      <span>▤</span>
+      <small>Mercado</small>
+    </button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
