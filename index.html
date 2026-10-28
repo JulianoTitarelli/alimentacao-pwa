@@ -3,35 +3,37 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#245747">
-  <meta name="description" content="Organize suas refeições, nutrientes e compras da semana.">
-  <title>Minha Alimentação</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#D7EFFD">
+  <meta name="description" content="Organize seus pratos, refeições, nutrientes e compras da semana.">
+
+  <title>Minha Alimentação ♡</title>
+
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topo">
     <div>
-      <p class="sobretitulo">SEU ORGANIZADOR PESSOAL</p>
-      <h1>Minha alimentação</h1>
-      <p class="subtitulo">Pequenas escolhas, bons hábitos.</p>
+      <p class="sobretitulo">SEU CANTINHO DE CUIDADO</p>
+      <h1>Minha alimentação ♡</h1>
+      <p class="subtitulo">Um dia de cada vez, com carinho.</p>
     </div>
-    <div class="marca" aria-hidden="true">MA</div>
+    <div class="marca" aria-hidden="true">♡</div>
   </header>
 
-  <main>
+  <main id="conteudo">
     <section class="resumo">
       <div class="secao-titulo">
         <div>
           <p class="sobretitulo">ACOMPANHAMENTO</p>
-          <h2>Resumo do dia</h2>
+          <h2>Meu dia em números</h2>
         </div>
         <span class="data-hoje" id="dataHoje">Hoje</span>
       </div>
 
       <article class="calorias">
-        <p>Consumo de energia</p>
+        <p>Consumo de energia planejado</p>
         <div class="numero-calorias">
           <strong id="totalKcal">0</strong>
           <span>kcal</span>
@@ -40,7 +42,7 @@
           <div id="barraKcal"></div>
         </div>
         <p class="texto-apoio" id="textoKcal">
-          Adicione alimentos para acompanhar seu consumo.
+          Monte seus pratos para acompanhar os nutrientes.
         </p>
       </article>
 
@@ -67,33 +69,42 @@
       <div class="secao-titulo">
         <div>
           <p class="sobretitulo">ORGANIZE SUA ROTINA</p>
-          <h2>O que você precisa?</h2>
+          <h2>O que vamos preparar?</h2>
         </div>
       </div>
 
-      <button class="atalho" data-tela="refeicoes">
-        <span class="icone">01</span>
+      <button class="atalho" data-tela="pratos">
+        <span class="icone">♡</span>
         <span class="atalho-texto">
-          <strong>Minhas refeições</strong>
-          <small>Organize seu café, almoço, jantar e lanches.</small>
+          <strong>Minha coleção de pratos</strong>
+          <small>Crie pratos e reutilize-os em qualquer semana.</small>
         </span>
         <span class="seta">›</span>
       </button>
 
       <button class="atalho" data-tela="alimentos">
-        <span class="icone">02</span>
+        <span class="icone">✿</span>
         <span class="atalho-texto">
-          <strong>Cadastro de alimentos</strong>
-          <small>Consulte e cadastre os valores nutricionais.</small>
+          <strong>Meus alimentos</strong>
+          <small>Cadastre ingredientes e seus nutrientes.</small>
+        </span>
+        <span class="seta">›</span>
+      </button>
+
+      <button class="atalho" data-tela="semanas">
+        <span class="icone">✧</span>
+        <span class="atalho-texto">
+          <strong>Cardápios semanais</strong>
+          <small>Planeje cada dia com os pratos que escolher.</small>
         </span>
         <span class="seta">›</span>
       </button>
 
       <button class="atalho" data-tela="mercado">
-        <span class="icone">03</span>
+        <span class="icone">♡</span>
         <span class="atalho-texto">
           <strong>Lista de mercado</strong>
-          <small>Calcule os ingredientes para a semana.</small>
+          <small>Veja a soma dos ingredientes da semana.</small>
         </span>
         <span class="seta">›</span>
       </button>
@@ -102,18 +113,37 @@
     <section class="refeicoes-hoje">
       <div class="secao-titulo">
         <div>
-          <p class="sobretitulo">SEU DIA</p>
-          <h2>Refeições planejadas</h2>
+          <p class="sobretitulo">SEU ESPAÇO</p>
+          <h2>Seus cadastros</h2>
         </div>
       </div>
-      <div id="listaRefeicoes">
-        <div class="vazio">
-          <span class="vazio-icone">+</span>
-          <p>Seu planejamento começa aqui.</p>
-          <small>Em breve você poderá adicionar seus alimentos e quantidades.</small>
-        </div>
+
+      <div class="grade-nutrientes">
+        <article class="nutriente">
+          <span class="marcador proteina"></span>
+          <p>Alimentos</p>
+          <strong id="quantidadeAlimentos">0</strong>
+        </article>
+        <article class="nutriente">
+          <span class="marcador carboidrato"></span>
+          <p>Pratos</p>
+          <strong id="quantidadePratos">0</strong>
+        </article>
+        <article class="nutriente">
+          <span class="marcador gordura"></span>
+          <p>Semanas</p>
+          <strong id="quantidadeSemanas">0</strong>
+        </article>
+      </div>
+
+      <div id="listaRefeicoes" class="vazio">
+        <span class="vazio-icone">♡</span>
+        <p>Seu planejamento começa aqui.</p>
+        <small>Cadastre seus primeiros alimentos e monte seus pratos.</small>
       </div>
     </section>
+
+    <section id="telaDinamica" hidden></section>
   </main>
 
   <nav class="navegacao" aria-label="Navegação principal">
@@ -121,13 +151,13 @@
       <span>⌂</span>
       <small>Início</small>
     </button>
-    <button class="nav-item" data-tela="refeicoes">
-      <span>≡</span>
-      <small>Refeições</small>
+    <button class="nav-item" data-tela="pratos">
+      <span>♡</span>
+      <small>Pratos</small>
     </button>
-    <button class="nav-item" data-tela="alimentos">
-      <span>＋</span>
-      <small>Alimentos</small>
+    <button class="nav-item" data-tela="semanas">
+      <span>▦</span>
+      <small>Semanas</small>
     </button>
     <button class="nav-item" data-tela="mercado">
       <span>▤</span>
@@ -136,5 +166,13 @@
   </nav>
 
   <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js")
+          .catch(erro => console.error("Falha ao ativar modo offline:", erro));
+      });
+    }
+  </script>
 </body>
 </html>
