@@ -648,6 +648,7 @@ function mostrarInicio() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+
 function abrirTela(tela) {
   if (tela === "inicio") {
     mostrarInicio();
@@ -664,8 +665,19 @@ function abrirTela(tela) {
     return;
   }
 
+  if (tela === "pratos") {
+    document.querySelectorAll("#conteudo > section:not(#telaDinamica)").forEach(secao => {
+      secao.hidden = true;
+    });
+
+    renderizarPratos();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
   alert("Esta área será implementada na próxima etapa. ♡");
 }
+
 
 function configurarNavegacao() {
   document.querySelectorAll("[data-tela]").forEach(botao => {
