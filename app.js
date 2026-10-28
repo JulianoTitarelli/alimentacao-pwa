@@ -693,3 +693,305 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 console.info("Minha Alimentação: interface de alimentos carregada.");
+
+/* =========================================
+   CADASTRO E LISTAGEM DE PRATOS
+========================================= */
+
+function renderizarPratos() {
+  const tela = $("#telaDinamica");
+  tela.replaceChildren();
+  tela.hidden = false;
+
+  const secao = criarElemento("section", "tela-interna");
+  const cabecalho = criarElemento("div", "cabecalho-tela");
+  const titulo = document.createElement("div");
+
+  titulo.append(criarElemento("p", "sobretitulo", "SUA COLEÇÃO"));
+  titulo.append(criarElemento("h2", "", "Meus pratos"));
+  titulo.append(criarElemento("p", "subtitulo", "Monte receitas com seus alimentos e veja os nutrientes por porção."));
+
+  const voltar = criarElemento("button", "botao-voltar", "‹ Início");
+  voltar.type = "button";
+  voltar.addEventListener("click", mostrarInicio);
+
+  cabecalho.append(titulo, voltar);
+  secao.append(cabecalho);
+
+  const cartao = criarElemento("div", "cartao-formulario");
+  cartao.append(criarElemento("h3", "", "♡ Criar novo prato"));
+
+  const formulario = document.createElement("form");
+
+  const nome = criarCampo({
+    rotulo: "Nome do prato",
+    nome: "nomePrato",
+    obrigatorio: true
+  });
+
+  const categoria = criarCampo({
+    rotulo: "Tipo de refeição",
+    nome: "categoriaPrato",
+    obrigatorio: true,
+    opcoes: [
+      { valor: "Café da manhã", texto: "Café da manhã" },
+      { valor: "Almoço", texto: "Almoço" },
+      { valor: "Jantar", texto: "Jantar" },
+      { valor: "Lanche", texto: "Lanche" },
+      { valor: "Acompanhamento", texto: "Acompanhamento" },
+      { valor: "Outros", texto: "Outros" }
+    ]
+  });
+
+  formulario.append(nome.campo, categoria.campo);
+
+  const ingredientesArea = criarElemento("div", "");
+  ingredientesArea.append(criarElemento("h3", "", "Ingredientes"));
+
+  const orientacao = criarElemento(
+    "p",
+    "texto-vazio",
+    "As quantidades representam uma porção individual. Para alimentos cadastrados por 100 g ou 100 ml, informe a quantidade usada nessa porção."
+  );
+
+  ingredientesArea.append(orientacao);
+
+  const linhas = criarElemento("div", "lista-cadastros");
+  ingredientesArea.append(linhas);
+
+  const alimentos = listarAlimentos();
+  let contadorLinhas = 0;
+
+  function adicionarLinha() {
+    if (alimentos.length === 0) {
+      mostrarMensagem(
+        secao,
+        "Cadastre pelo menos um alimento antes de montar um prato.",
+        "erro"
+      );
+      return;
+    }
+
+    contadorLinhas++;
+
+    const linha = criarElemento("div", "cartao-formulario");
+    linha.style.marginBottom = "10px";
+    linha.style.padding = "13px";
+
+    const campoAlimento = criarCampo({
+      rotulo: "Alimento",
+      nome: "ingrediente" + contadorLinhas,
+      obrigatorio: true,
+      opcoes: alimentos.map(alimento => ({
+        valor: alimento.id,
+        texto: alimento.nome + (
+          alimento.unidadeBase === "unidade"
+            ? " (unidade)"
+            : " (" + alimento.unidadeBase + ")"
+        )
+      }))
+    });
+
+    const campoQuantidade = criarCampo({
+      rotulo: "Quantidade utilizada",
+      nome: "quantidade" + contadorLinhas,
+      tipo: "number",
+      valor: "100",
+      obrigatorio: true
+    });
+
+    campoQuantidade.entrada.min = "0.01";
+    campoQuantidade.entrada.step = "any";
+
+    const unidadeTexto = criarElemento("small", "", "");
+    unidadeTexto.style.display = "block";
+    unidadeTexto.style.marginTop = "6px";
+
+    function atualizarUnidade() {
+      const alimento = buscarAlimento(campoAlimento.entrada.value);
+
+      if (!alimento) {
+        unidadeTexto.textContent = "";
+        return;
+      }
+
+      unidadeTexto.textContent = alimento.unidadeBase === "unidade"
+        ? "Quantidade em unidades."
+        : "Quantidade em " + alimento.unidadeBase + ".";
+    }
+
+    campoAlimento.entrada.addEventListener("change", atualizarUnidade);
+    atualizarUnidade();
+
+    const campos = criarElemento("div", "grade-campos");
+    campos.append(campoAlimento.campo, campoQuantidade.campo);
+
+    const remover = criarElemento("button", "botao-excluir", "Remover ingrediente");
+    remover.type = "button";
+    remover.addEventListener("click", () => linha.remove());
+
+    linha.append(campos, unidadeTexto, remover);
+    linha.dataset.ingrediente = "true";
+
+    linhas.append(linha);
+  }
+
+  const adicionar = criarElemento("button", "botao-secundario", "+ Adicionar ingrediente");
+  adicionar.type = "button";
+  adicionar.addEventListener("click", adicionarLinha);
+
+  ingredientesArea.append(adicionar);
+  formulario.append(ingredientesArea);
+
+  const campoPreparo = criarElemento("div", "campo");
+  const labelPreparo = criarElemento("label", "", "Modo de preparo (opcional)");
+  labelPreparo.htmlFor = "modoPreparo";
+
+  const preparo = document.createElement("textarea");
+  preparo.id = "modoPreparo";
+  preparo.name = "modoPreparo";
+  preparo.rows = 3;
+  preparo.placeholder = "Como você prepara este prato?";
+  preparo.style.width = "100%";
+  preparo.style.padding = "12px";
+  preparo.style.border = "1px solid var(--borda)";
+  preparo.style.borderRadius = "13px";
+  preparo.style.color = "var(--texto)";
+  preparo.style.background = "#fbfdff";
+  preparo.style.font = "inherit";
+
+  campoPreparo.append(labelPreparo, preparo);
+  formulario.append(campoPreparo);
+
+  const salvar = criarElemento("button", "botao-principal", "♡ Salvar prato");
+  salvar.type = "submit";
+  formulario.append(salvar);
+
+  formulario.addEventListener("submit", evento => {
+    evento.preventDefault();
+
+    try {
+      const linhasIngredientes = Array.from(
+        linhas.querySelectorAll('[data-ingrediente="true"]')
+      );
+
+      if (linhasIngredientes.length === 0) {
+        throw new Error("Adicione pelo menos um ingrediente.");
+      }
+
+      const ingredientes = linhasIngredientes.map(linha => {
+        const seletor = linha.querySelector("select");
+        const quantidade = linha.querySelector('input[type="number"]');
+
+        return {
+          alimentoId: seletor.value,
+          quantidade: numeroValido(
+            quantidade.value,
+            "Quantidade do ingrediente"
+          )
+        };
+      });
+
+      cadastrarPrato({
+        nome: nome.entrada.value,
+        categoria: categoria.entrada.value,
+        ingredientes,
+        origem: "colecao",
+        preparo: preparo.value
+      });
+
+      renderizarPratos();
+      atualizarPainel();
+
+      mostrarMensagem(
+        $("#telaDinamica .tela-interna"),
+        "Prato salvo com sucesso! ♡",
+        "sucesso"
+      );
+    } catch (erro) {
+      mostrarMensagem(secao, erro.message, "erro");
+    }
+  });
+
+  cartao.append(formulario);
+  secao.append(cartao);
+
+  secao.append(criarElemento("h3", "", "Pratos cadastrados"));
+
+  const lista = criarElemento("div", "lista-cadastros");
+  const pratos = listarPratos();
+
+  if (pratos.length === 0) {
+    lista.append(
+      criarElemento(
+        "div",
+        "texto-vazio",
+        "Você ainda não criou pratos. Quando salvar o primeiro, ele aparecerá aqui."
+      )
+    );
+  }
+
+  pratos.forEach(prato => {
+    const item = criarElemento("article", "item-cadastro");
+    const conteudo = criarElemento("div", "item-cadastro-conteudo");
+
+    conteudo.append(criarElemento("span", "etiqueta", prato.categoria));
+    conteudo.append(criarElemento("h4", "", prato.nome));
+
+    conteudo.append(
+      criarElemento(
+        "p",
+        "",
+        `${formatarNumero(prato.nutrientes.kcal)} kcal · P ${formatarNumero(prato.nutrientes.proteinas)} g · C ${formatarNumero(prato.nutrientes.carboidratos)} g · G ${formatarNumero(prato.nutrientes.gorduras)} g`
+      )
+    );
+
+    const ingredientesTexto = prato.ingredientes.map(ingrediente => {
+      const alimento = buscarAlimento(ingrediente.alimentoId);
+
+      if (!alimento) return "";
+
+      const unidade = alimento.unidadeBase === "unidade"
+        ? " un."
+        : " " + alimento.unidadeBase;
+
+      return `${alimento.nome}: ${formatarNumero(ingrediente.quantidade)}${unidade}`;
+    }).filter(Boolean).join(" · ");
+
+    conteudo.append(criarElemento("p", "", ingredientesTexto));
+
+    if (prato.preparo) {
+      conteudo.append(criarElemento("p", "", "Preparo: " + prato.preparo));
+    }
+
+    const excluir = criarElemento("button", "botao-excluir", "Excluir");
+    excluir.type = "button";
+
+    excluir.addEventListener("click", () => {
+      if (!confirm(`Excluir o prato "${prato.nome}"?`)) return;
+
+      try {
+        excluirPrato(prato.id);
+        renderizarPratos();
+        atualizarPainel();
+      } catch (erro) {
+        mostrarMensagem(secao, erro.message, "erro");
+      }
+    });
+
+    item.append(conteudo, excluir);
+    lista.append(item);
+  });
+
+  secao.append(lista);
+  tela.append(secao);
+  atualizarNavegacao("pratos");
+
+  if (alimentos.length === 0) {
+    mostrarMensagem(
+      secao,
+      "Primeiro, entre em Meus alimentos e cadastre os ingredientes que você utiliza.",
+      "erro"
+    );
+  }
+}
