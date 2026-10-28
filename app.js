@@ -1,12 +1,6 @@
 
 "use strict";
 
-/*
- * Minha Alimentação ♡
- * Armazenamento local, alimentos, pratos e cálculos nutricionais.
- * Não utiliza Firebase nem serviços externos.
- */
-
 const CHAVE_DADOS = "minhaAlimentacao_dados_v1";
 
 const dadosIniciais = {
@@ -34,13 +28,14 @@ function gerarId() {
     return crypto.randomUUID();
   }
 
-  return (
-    Date.now().toString(36) +
-    Math.random().toString(36).slice(2, 10)
-  );
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
 function numeroValido(valor, nome = "Valor") {
+  if (valor === "" || valor === null || valor === undefined) {
+    throw new Error(nome + " é obrigatório.");
+  }
+
   const numero = Number(valor);
 
   if (!Number.isFinite(numero) || numero < 0) {
@@ -64,9 +59,7 @@ function carregarDados() {
   try {
     const salvo = localStorage.getItem(CHAVE_DADOS);
 
-    if (!salvo) {
-      return copiar(dadosIniciais);
-    }
+    if (!salvo) return copiar(dadosIniciais);
 
     const dados = JSON.parse(salvo);
 
@@ -101,9 +94,7 @@ function salvarDados() {
     return true;
   } catch (erro) {
     console.error("Não foi possível salvar os dados:", erro);
-    throw new Error(
-      "O navegador não conseguiu salvar os dados. Verifique o espaço disponível."
-    );
+    throw new Error("Não foi possível salvar os dados neste navegador.");
   }
 }
 
@@ -118,14 +109,6 @@ function buscarAlimento(id) {
   return alimento ? copiar(alimento) : null;
 }
 
-/*
- * nutrientes:
- * valores nutricionais para cada 100 g, 100 ml ou unidade,
- * conforme a unidade-base escolhida.
- *
- * unidadeBase:
- * "g", "ml" ou "unidade".
- */
 function cadastrarAlimento({
   nome,
   categoria = "Outros",
@@ -135,7 +118,7 @@ function cadastrarAlimento({
   nome = textoObrigatorio(nome, "Nome do alimento");
 
   if (!["g", "ml", "unidade"].includes(unidadeBase)) {
-    throw new Error("A unidade-base deve ser g, ml ou unidade.");
+    throw new Error("Escolha uma unidade válida.");
   }
 
   const alimento = {
@@ -144,19 +127,10 @@ function cadastrarAlimento({
     categoria: textoObrigatorio(categoria, "Categoria"),
     unidadeBase,
     nutrientes: {
-      kcal: numeroValido(nutrientes.kcal ?? 0, "Calorias"),
-      proteinas: numeroValido(
-        nutrientes.proteinas ?? 0,
-        "Proteínas"
-      ),
-      carboidratos: numeroValido(
-        nutrientes.carboidratos ?? 0,
-        "Carboidratos"
-      ),
-      gorduras: numeroValido(
-        nutrientes.gorduras ?? 0,
-        "Gorduras"
-      )
+      kcal: numeroValido(nutrientes.kcal, "Calorias"),
+      proteinas: numeroValido(nutrientes.proteinas, "Proteínas"),
+      carboidratos: numeroValido(nutrientes.carboidratos, "Carboidratos"),
+      gorduras: numeroValido(nutrientes.gorduras, "Gorduras")
     },
     criadoEm: new Date().toISOString()
   };
@@ -167,75 +141,19 @@ function cadastrarAlimento({
   return copiar(alimento);
 }
 
-function atualizarAlimento(id, alteracoes) {
-  const indice = dados.alimentos.findIndex(item => item.id === id);
-
-  if (indice === -1) {
-    throw new Error("Alimento não encontrado.");
-  }
-
-  const atual = dados.alimentos[indice];
-
-  const atualizado = {
-    ...atual,
-    nome: textoObrigatorio(
-      alteracoes.nome ?? atual.nome,
-      "Nome do alimento"
-    ),
-    categoria: textoObrigatorio(
-      alteracoes.categoria ?? atual.categoria,
-      "Categoria"
-    ),
-    unidadeBase: alteracoes.unidadeBase ?? atual.unidadeBase,
-    nutrientes: {
-      ...atual.nutrientes,
-      ...(alteracoes.nutrientes || {})
-    }
-  };
-
-  if (!["g", "ml", "unidade"].includes(atualizado.unidadeBase)) {
-    throw new Error("Unidade-base inválida.");
-  }
-
-  for (const chave of [
-    "kcal",
-    "proteinas",
-    "carboidratos",
-    "gorduras"
-  ]) {
-    atualizado.nutrientes[chave] = numeroValido(
-      atualizado.nutrientes[chave],
-      chave
-    );
-  }
-
-  dados.alimentos[indice] = atualizado;
-  salvarDados();
-
-  return copiar(atualizado);
-}
-
 function excluirAlimento(id) {
   const usadoEmPrato = dados.pratos.some(prato =>
-    prato.ingredientes.some(ingrediente =>
-      ingrediente.alimentoId === id
-    )
+    prato.ingredientes.some(ingrediente => ingrediente.alimentoId === id)
   );
 
   if (usadoEmPrato) {
-    throw new Error(
-      "Este alimento está em um prato. Remova-o dos pratos antes de excluí-lo."
-    );
+    throw new Error("Este alimento está em um prato. Remova-o dos pratos antes de excluí-lo.");
   }
 
   dados.alimentos = dados.alimentos.filter(item => item.id !== id);
   salvarDados();
 }
 
-/*
- * quantidade é expressa na unidade-base do alimento.
- * Exemplo: 150 g, 200 ml ou 2 unidades.
- */
 function calcularNutrientes(ingredientes) {
   const total = {
     kcal: 0,
@@ -249,15 +167,10 @@ function calcularNutrientes(ingredientes) {
 
     if (!alimento) continue;
 
-    const quantidade = numeroValido(
-      ingrediente.quantidade,
-      "Quantidade do ingrediente"
-    );
-
-    const fator =
-      alimento.unidadeBase === "unidade"
-        ? quantidade
-        : quantidade / 100;
+    const quantidade = numeroValido(ingrediente.quantidade, "Quantidade");
+    const fator = alimento.unidadeBase === "unidade"
+      ? quantidade
+      : quantidade / 100;
 
     for (const chave of Object.keys(total)) {
       total[chave] += alimento.nutrientes[chave] * fator;
@@ -272,14 +185,6 @@ function calcularNutrientes(ingredientes) {
   );
 }
 
-/*
- * Cada prato é cadastrado para UMA porção individual.
- * Os valores nutricionais são calculados pelos ingredientes.
- *
- * origem:
- * "colecao" = prato permanente
- * "semana" = prato exclusivo de uma semana
- */
 function cadastrarPrato({
   nome,
   categoria = "Outros",
@@ -294,16 +199,7 @@ function cadastrarPrato({
     throw new Error("Origem do prato inválida.");
   }
 
-  if (origem === "semana" && !semanaId) {
-    throw new Error(
-      "Informe a semana para cadastrar um prato exclusivo."
-    );
-  }
-
-  if (
-    origem === "semana" &&
-    !dados.semanas.some(semana => semana.id === semanaId)
-  ) {
+  if (origem === "semana" && !dados.semanas.some(s => s.id === semanaId)) {
     throw new Error("A semana selecionada não existe.");
   }
 
@@ -314,23 +210,18 @@ function cadastrarPrato({
   const ingredientesValidos = ingredientes.map(item => {
     const alimento = buscarAlimento(item.alimentoId);
 
-    if (!alimento) {
-      throw new Error("Um dos alimentos selecionados não existe.");
-    }
+    if (!alimento) throw new Error("Um dos alimentos não existe.");
 
     return {
       alimentoId: alimento.id,
-      quantidade: numeroValido(
-        item.quantidade,
-        "Quantidade de " + alimento.nome
-      )
+      quantidade: numeroValido(item.quantidade, "Quantidade de " + alimento.nome)
     };
   });
 
   const prato = {
     id: gerarId(),
     nome,
-    categoria: textoObrigatorio(categoria, "Categoria do prato"),
+    categoria: textoObrigatorio(categoria, "Categoria"),
     origem,
     semanaId: origem === "semana" ? semanaId : null,
     ingredientes: ingredientesValidos,
@@ -349,10 +240,7 @@ function cadastrarPrato({
 
 function listarPratos({ semanaId = null } = {}) {
   return copiar(dados.pratos)
-    .filter(prato =>
-      prato.origem === "colecao" ||
-      prato.semanaId === semanaId
-    )
+    .filter(prato => prato.origem === "colecao" || prato.semanaId === semanaId)
     .map(prato => ({
       ...prato,
       nutrientes: calcularNutrientes(prato.ingredientes)
@@ -363,35 +251,24 @@ function listarPratos({ semanaId = null } = {}) {
 function buscarPrato(id) {
   const prato = dados.pratos.find(item => item.id === id);
 
-  if (!prato) return null;
-
-  return copiar({
-    ...prato,
-    nutrientes: calcularNutrientes(prato.ingredientes)
-  });
+  return prato
+    ? copiar({ ...prato, nutrientes: calcularNutrientes(prato.ingredientes) })
+    : null;
 }
 
 function excluirPrato(id) {
-  const usadoNaSemana = dados.semanas.some(semana =>
-    semana.refeicoes.some(refeicao =>
-      refeicao.pratoId === id
-    )
+  const usado = dados.semanas.some(semana =>
+    semana.refeicoes.some(refeicao => refeicao.pratoId === id)
   );
 
-  if (usadoNaSemana) {
-    throw new Error(
-      "Este prato está em um cardápio semanal. Remova-o do cardápio antes de excluí-lo."
-    );
+  if (usado) {
+    throw new Error("Este prato está em um cardápio. Remova-o antes de excluí-lo.");
   }
 
   dados.pratos = dados.pratos.filter(prato => prato.id !== id);
   salvarDados();
 }
 
-/*
- * Cria uma semana vazia.
- * As refeições serão ligadas aos pratos nas próximas etapas.
- */
 function criarSemana({ nome, inicio }) {
   nome = textoObrigatorio(nome, "Nome da semana");
   inicio = textoObrigatorio(inicio, "Data inicial");
@@ -421,7 +298,6 @@ function criarSemana({ nome, inicio }) {
   }
 
   salvarDados();
-
   return copiar(semana);
 }
 
@@ -446,26 +322,18 @@ function selecionarSemana(id) {
 }
 
 function obterResumo() {
-  const semanaAtiva = buscarSemana(
-    dados.preferencias.semanaAtivaId
-  );
-
   return {
     quantidadeAlimentos: dados.alimentos.length,
     quantidadePratos: dados.pratos.length,
     quantidadeSemanas: dados.semanas.length,
-    semanaAtiva
+    semanaAtiva: buscarSemana(dados.preferencias.semanaAtivaId)
   };
 }
 
-/*
- * API pública para a interface e para testes.
- */
 window.Alimentacao = Object.freeze({
   listarAlimentos,
   buscarAlimento,
   cadastrarAlimento,
-  atualizarAlimento,
   excluirAlimento,
   calcularNutrientes,
   cadastrarPrato,
@@ -480,70 +348,336 @@ window.Alimentacao = Object.freeze({
   salvarDados
 });
 
-console.info("Minha Alimentação: núcleo carregado.");
-
 /* =========================================
-   CONEXÃO INICIAL COM A INTERFACE
+   INTERFACE
 ========================================= */
 
+const $ = seletor => document.querySelector(seletor);
+
+function criarElemento(tag, classe, texto) {
+  const elemento = document.createElement(tag);
+
+  if (classe) elemento.className = classe;
+  if (texto !== undefined) elemento.textContent = texto;
+
+  return elemento;
+}
+
+function formatarNumero(valor) {
+  return Number(valor || 0).toLocaleString("pt-BR", {
+    maximumFractionDigits: 2
+  });
+}
+
 function atualizarPainel() {
-  const resumo = window.Alimentacao.obterResumo();
+  const resumo = obterResumo();
 
-  const elementoData = document.getElementById("dataHoje");
-  const elementoAlimentos = document.getElementById("quantidadeAlimentos");
-  const elementoPratos = document.getElementById("quantidadePratos");
-  const elementoSemanas = document.getElementById("quantidadeSemanas");
-
-  if (elementoData) {
-    elementoData.textContent = new Date().toLocaleDateString("pt-BR", {
+  if ($("#dataHoje")) {
+    $("#dataHoje").textContent = new Date().toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "short"
     });
   }
 
-  if (elementoAlimentos) {
-    elementoAlimentos.textContent = resumo.quantidadeAlimentos;
+  if ($("#quantidadeAlimentos")) {
+    $("#quantidadeAlimentos").textContent = resumo.quantidadeAlimentos;
   }
 
-  if (elementoPratos) {
-    elementoPratos.textContent = resumo.quantidadePratos;
+  if ($("#quantidadePratos")) {
+    $("#quantidadePratos").textContent = resumo.quantidadePratos;
   }
 
-  if (elementoSemanas) {
-    elementoSemanas.textContent = resumo.quantidadeSemanas;
+  if ($("#quantidadeSemanas")) {
+    $("#quantidadeSemanas").textContent = resumo.quantidadeSemanas;
   }
 }
 
-function configurarNavegacaoInicial() {
+function mostrarMensagem(container, mensagem, tipo = "") {
+  const elemento = criarElemento("div", "mensagem-status" + (tipo ? " " + tipo : ""), mensagem);
+  elemento.setAttribute("role", tipo === "erro" ? "alert" : "status");
+  container.prepend(elemento);
+}
+
+function criarCampo({ rotulo, nome, tipo = "text", valor = "", obrigatorio = false, opcoes = null, ajuda = "" }) {
+  const campo = criarElemento("div", "campo");
+  const id = "campo-" + nome;
+
+  const label = criarElemento("label", "", rotulo);
+  label.htmlFor = id;
+  campo.append(label);
+
+  let entrada;
+
+  if (opcoes) {
+    entrada = document.createElement("select");
+
+    opcoes.forEach(opcao => {
+      const item = document.createElement("option");
+      item.value = opcao.valor;
+      item.textContent = opcao.texto;
+      entrada.append(item);
+    });
+  } else {
+    entrada = document.createElement("input");
+    entrada.type = tipo;
+    if (tipo === "number") {
+      entrada.min = "0";
+      entrada.step = "any";
+      entrada.inputMode = "decimal";
+    }
+  }
+
+  entrada.id = id;
+  entrada.name = nome;
+  entrada.value = valor;
+  entrada.required = obrigatorio;
+  campo.append(entrada);
+
+  if (ajuda) campo.append(criarElemento("small", "", ajuda));
+
+  return { campo, entrada };
+}
+
+function renderizarAlimentos() {
+  const tela = $("#telaDinamica");
+  tela.replaceChildren();
+  tela.hidden = false;
+
+  const secao = criarElemento("section", "tela-interna");
+  const cabecalho = criarElemento("div", "cabecalho-tela");
+  const titulo = document.createElement("div");
+
+  titulo.append(criarElemento("p", "sobretitulo", "SUA DESPENSA DIGITAL"));
+  titulo.append(criarElemento("h2", "", "Meus alimentos"));
+  titulo.append(criarElemento("p", "subtitulo", "Cadastre ingredientes e seus nutrientes."));
+
+  const voltar = criarElemento("button", "botao-voltar", "‹ Início");
+  voltar.type = "button";
+  voltar.addEventListener("click", mostrarInicio);
+
+  cabecalho.append(titulo, voltar);
+  secao.append(cabecalho);
+
+  const formularioCartao = criarElemento("div", "cartao-formulario");
+  formularioCartao.append(criarElemento("h3", "", "♡ Novo alimento"));
+
+  const formulario = document.createElement("form");
+  formulario.noValidate = false;
+
+  const nome = criarCampo({
+    rotulo: "Nome do alimento",
+    nome: "nome",
+    obrigatorio: true
+  });
+
+  const categoria = criarCampo({
+    rotulo: "Categoria",
+    nome: "categoria",
+    obrigatorio: true,
+    opcoes: [
+      { valor: "Cereais e tubérculos", texto: "Cereais e tubérculos" },
+      { valor: "Frutas", texto: "Frutas" },
+      { valor: "Verduras e legumes", texto: "Verduras e legumes" },
+      { valor: "Proteínas", texto: "Proteínas" },
+      { valor: "Laticínios", texto: "Laticínios" },
+      { valor: "Leguminosas", texto: "Leguminosas" },
+      { valor: "Óleos e gorduras", texto: "Óleos e gorduras" },
+      { valor: "Outros", texto: "Outros" }
+    ]
+  });
+
+  const unidade = criarCampo({
+    rotulo: "Unidade-base",
+    nome: "unidadeBase",
+    obrigatorio: true,
+    opcoes: [
+      { valor: "g", texto: "Gramas (g)" },
+      { valor: "ml", texto: "Mililitros (ml)" },
+      { valor: "unidade", texto: "Unidade (ex.: 1 ovo)" }
+    ]
+  });
+
+  formulario.append(nome.campo, categoria.campo, unidade.campo);
+
+  formulario.append(
+    criarElemento("p", "texto-vazio", "Informe os nutrientes por 100 g ou 100 ml. Para unidade, informe os nutrientes de uma unidade.")
+  );
+
+  const grade = criarElemento("div", "grade-campos");
+
+  const kcal = criarCampo({
+    rotulo: "Energia (kcal)",
+    nome: "kcal",
+    tipo: "number",
+    obrigatorio: true,
+    valor: "0"
+  });
+
+  const proteinas = criarCampo({
+    rotulo: "Proteínas (g)",
+    nome: "proteinas",
+    tipo: "number",
+    obrigatorio: true,
+    valor: "0"
+  });
+
+  const carboidratos = criarCampo({
+    rotulo: "Carboidratos (g)",
+    nome: "carboidratos",
+    tipo: "number",
+    obrigatorio: true,
+    valor: "0"
+  });
+
+  const gorduras = criarCampo({
+    rotulo: "Gorduras (g)",
+    nome: "gorduras",
+    tipo: "number",
+    obrigatorio: true,
+    valor: "0"
+  });
+
+  [kcal, proteinas, carboidratos, gorduras].forEach(item => {
+    grade.append(item.campo);
+  });
+
+  formulario.append(grade);
+
+  const salvar = criarElemento("button", "botao-principal", "♡ Salvar alimento");
+  salvar.type = "submit";
+  formulario.append(salvar);
+
+  formulario.addEventListener("submit", evento => {
+    evento.preventDefault();
+
+    try {
+      cadastrarAlimento({
+        nome: nome.entrada.value,
+        categoria: categoria.entrada.value,
+        unidadeBase: unidade.entrada.value,
+        nutrientes: {
+          kcal: numeroValido(kcal.entrada.value, "Calorias"),
+          proteinas: numeroValido(proteinas.entrada.value, "Proteínas"),
+          carboidratos: numeroValido(carboidratos.entrada.value, "Carboidratos"),
+          gorduras: numeroValido(gorduras.entrada.value, "Gorduras")
+        }
+      });
+
+      renderizarAlimentos();
+      atualizarPainel();
+      mostrarMensagem($("#telaDinamica .tela-interna"), "Alimento salvo com sucesso! ♡", "sucesso");
+      $("#telaDinamica").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (erro) {
+      mostrarMensagem(secao, erro.message, "erro");
+    }
+  });
+
+  formularioCartao.append(formulario);
+  secao.append(formularioCartao);
+
+  secao.append(criarElemento("h3", "", "Alimentos cadastrados"));
+
+  const lista = criarElemento("div", "lista-cadastros");
+  const alimentos = listarAlimentos();
+
+  if (alimentos.length === 0) {
+    lista.append(
+      criarElemento("div", "texto-vazio", "Ainda não há alimentos cadastrados. Adicione o primeiro usando o formulário acima.")
+    );
+  }
+
+  alimentos.forEach(alimento => {
+    const item = criarElemento("article", "item-cadastro");
+    const conteudo = criarElemento("div", "item-cadastro-conteudo");
+
+    conteudo.append(criarElemento("span", "etiqueta", alimento.categoria));
+    conteudo.append(criarElemento("h4", "", alimento.nome));
+
+    const unidadeTexto = alimento.unidadeBase === "unidade"
+      ? "por unidade"
+      : "por 100 " + alimento.unidadeBase;
+
+    conteudo.append(
+      criarElemento(
+        "p",
+        "",
+        `${formatarNumero(alimento.nutrientes.kcal)} kcal · P ${formatarNumero(alimento.nutrientes.proteinas)} g · C ${formatarNumero(alimento.nutrientes.carboidratos)} g · G ${formatarNumero(alimento.nutrientes.gorduras)} g`
+      )
+    );
+
+    conteudo.append(criarElemento("p", "", unidadeTexto));
+
+    const excluir = criarElemento("button", "botao-excluir", "Excluir");
+    excluir.type = "button";
+
+    excluir.addEventListener("click", () => {
+      if (!confirm(`Excluir o alimento "${alimento.nome}"?`)) return;
+
+      try {
+        excluirAlimento(alimento.id);
+        renderizarAlimentos();
+        atualizarPainel();
+      } catch (erro) {
+        mostrarMensagem(secao, erro.message, "erro");
+      }
+    });
+
+    item.append(conteudo, excluir);
+    lista.append(item);
+  });
+
+  secao.append(lista);
+  tela.append(secao);
+  atualizarNavegacao("alimentos");
+}
+
+function atualizarNavegacao(telaAtiva) {
+  document.querySelectorAll(".nav-item").forEach(item => {
+    item.classList.toggle("ativo", item.dataset.tela === telaAtiva);
+  });
+}
+
+function mostrarInicio() {
+  $("#telaDinamica").hidden = true;
+
+  document.querySelectorAll("#conteudo > section:not(#telaDinamica)").forEach(secao => {
+    secao.hidden = false;
+  });
+
+  atualizarNavegacao("inicio");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function abrirTela(tela) {
+  if (tela === "inicio") {
+    mostrarInicio();
+    return;
+  }
+
+  if (tela === "alimentos") {
+    document.querySelectorAll("#conteudo > section:not(#telaDinamica)").forEach(secao => {
+      secao.hidden = true;
+    });
+
+    renderizarAlimentos();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  alert("Esta área será implementada na próxima etapa. ♡");
+}
+
+function configurarNavegacao() {
   document.querySelectorAll("[data-tela]").forEach(botao => {
     botao.addEventListener("click", () => {
-      const tela = botao.dataset.tela;
-
-      if (tela === "inicio") {
-        document.getElementById("telaDinamica").hidden = true;
-
-        document.querySelectorAll(
-          "#conteudo > section:not(#telaDinamica)"
-        ).forEach(secao => {
-          secao.hidden = false;
-        });
-      } else {
-        alert(
-          "A área selecionada será ativada na próxima etapa. ♡"
-        );
-      }
-
-      document.querySelectorAll(".nav-item").forEach(item => {
-        item.classList.toggle(
-          "ativo",
-          item.dataset.tela === tela
-        );
-      });
+      abrirTela(botao.dataset.tela);
     });
   });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   atualizarPainel();
-  configurarNavegacaoInicial();
+  configurarNavegacao();
 });
+
+console.info("Minha Alimentação: interface de alimentos carregada.");
