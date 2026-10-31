@@ -1164,6 +1164,16 @@ function abrirTela(tela) {
     return;
   }
 
+      if (tela === "mercado") {
+    document.querySelectorAll("#conteudo > section:not(#telaDinamica)").forEach(secao => {
+      secao.hidden = true;
+    });
+
+    renderizarMercado();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
   alert("Esta área será implementada na próxima etapa. ♡");
 }
 
@@ -2172,8 +2182,11 @@ function renderizarConsumo() {
     }
   });
 
+
   cartaoAlimento.append(formularioAlimento);
   secao.append(cartaoAlimento);
+
+    
 
   // HISTÓRICO
 
@@ -2295,4 +2308,138 @@ function renderizarConsumo() {
   atualizarNavegacao("consumo");
 }
 
+// =====================================================
+// TELA: LISTA DE MERCADO
+// =====================================================
 
+function renderizarMercado() {
+  const tela = $("#telaDinamica");
+  tela.replaceChildren();
+  tela.hidden = false;
+
+  const secao = criarElemento("section", "tela-interna");
+  const cabecalho = criarElemento("div", "cabecalho-tela");
+  const titulo = document.createElement("div");
+
+  titulo.append(
+    criarElemento("p", "sobretitulo", "ORGANIZE SUAS COMPRAS")
+  );
+
+  titulo.append(
+    criarElemento("h2", "", "Lista de mercado")
+  );
+
+  titulo.append(
+    criarElemento(
+      "p",
+      "subtitulo",
+      "Tudo o que você precisa para preparar sua semana."
+    )
+  );
+
+  const voltar = criarElemento("button", "botao-voltar", "‹ Início");
+  voltar.type = "button";
+  voltar.addEventListener("click", mostrarInicio);
+
+  cabecalho.append(titulo, voltar);
+  secao.append(cabecalho);
+
+  const resumo = obterResumo();
+  const semanaAtiva = resumo.semanaAtiva;
+
+  if (!semanaAtiva) {
+    secao.append(
+      criarElemento(
+        "div",
+        "texto-vazio",
+        "Você ainda não selecionou uma semana. Crie ou selecione um cardápio semanal para gerar sua lista de mercado. ♡"
+      )
+    );
+
+    tela.append(secao);
+    atualizarNavegacao("mercado");
+    return;
+  }
+
+  const cartao = criarElemento("div", "cartao-formulario");
+
+  cartao.append(
+    criarElemento("h3", "", "♡ Compras da semana")
+  );
+
+  cartao.append(
+    criarElemento("p", "subtitulo", "Planejamento: " + semanaAtiva.nome)
+  );
+
+  const ingredientes = gerarListaMercado(semanaAtiva.id);
+
+  if (ingredientes.length === 0) {
+    cartao.append(
+      criarElemento(
+        "div",
+        "texto-vazio",
+        "Seu cardápio ainda não possui refeições com ingredientes cadastrados. Adicione pratos ao planejamento para gerar sua lista. ♡"
+      )
+    );
+
+    secao.append(cartao);
+    tela.append(secao);
+    atualizarNavegacao("mercado");
+    return;
+  }
+
+  cartao.append(
+    criarElemento(
+      "p",
+      "texto-apoio",
+      ingredientes.length + " ingredientes diferentes no planejamento."
+    )
+  );
+
+  const categorias = new Map();
+
+  ingredientes.forEach(ingrediente => {
+    const categoria = ingrediente.categoria || "Outros";
+
+    if (!categorias.has(categoria)) {
+      categorias.set(categoria, []);
+    }
+
+    categorias.get(categoria).push(ingrediente);
+  });
+
+  categorias.forEach((itens, categoria) => {
+    cartao.append(
+      criarElemento("h3", "", categoria)
+    );
+
+    const lista = criarElemento("div", "lista-cadastros");
+
+    itens.forEach(ingrediente => {
+      const item = criarElemento("article", "item-cadastro");
+      const conteudo = criarElemento("div", "item-cadastro-conteudo");
+
+      conteudo.append(
+        criarElemento("h4", "", ingrediente.nome)
+      );
+
+      conteudo.append(
+        criarElemento(
+          "p",
+          "",
+          formatarNumero(ingrediente.quantidade) + " " + ingrediente.unidade
+        )
+      );
+
+      item.append(conteudo);
+      lista.append(item);
+    });
+
+    cartao.append(lista);
+  });
+
+  secao.append(cartao);
+  tela.append(secao);
+
+  atualizarNavegacao("mercado");
+}
