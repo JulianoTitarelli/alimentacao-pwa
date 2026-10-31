@@ -1,14 +1,16 @@
 
 "use strict";
 
-const CACHE_NAME = "alimentacao-pwa-v1";
+const CACHE_NAME = "alimentacao-pwa-v2";
 
 const ARQUIVOS = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
-  "./manifest.json"
+  "./manifest.json",
+  "./img/icon-192.png",
+  "./img/icon-512.png"
 ];
 
 self.addEventListener("install", event => {
