@@ -2315,9 +2315,9 @@ secao.append(cartaoData);
     excluir.addEventListener("click", () => {
       if (!confirm("Excluir este registro de consumo?")) return;
 
-      excluirConsumo(consumo.id);
-      renderizarConsumo();
-      atualizarPainel();
+     excluirConsumo(consumo.id);
+renderizarConsumo(dataConsulta);
+atualizarPainel();
     });
 
     item.append(conteudo, excluir);
@@ -2436,6 +2436,31 @@ function renderizarMercado() {
     );
 
     const lista = criarElemento("div", "lista-cadastros");
+
+      if (consumos.length > 0) {
+  const excluirTodos = criarElemento(
+    "button",
+    "botao-excluir",
+    "Excluir todos os registros deste dia"
+  );
+
+  excluirTodos.type = "button";
+
+  excluirTodos.addEventListener("click", () => {
+    if (!confirm(
+      "Tem certeza que deseja excluir TODOS os registros deste dia? Essa ação não poderá ser desfeita."
+    )) return;
+
+    consumos.forEach(consumo => {
+      excluirConsumo(consumo.id);
+    });
+
+    renderizarConsumo(dataConsulta);
+    atualizarPainel();
+  });
+
+  secao.append(excluirTodos);
+}
 
     itens.forEach(ingrediente => {
       const item = criarElemento("article", "item-cadastro");
