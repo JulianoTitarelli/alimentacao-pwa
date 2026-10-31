@@ -722,11 +722,20 @@ function formatarNumero(valor) {
   });
 }
 
+
 function atualizarPainel() {
   const resumo = obterResumo();
 
+  // Data local de hoje no formato AAAA-MM-DD
+  const agora = new Date();
+  const hoje = [
+    agora.getFullYear(),
+    String(agora.getMonth() + 1).padStart(2, "0"),
+    String(agora.getDate()).padStart(2, "0")
+  ].join("-");
+
   if ($("#dataHoje")) {
-    $("#dataHoje").textContent = new Date().toLocaleDateString("pt-BR", {
+    $("#dataHoje").textContent = agora.toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "short"
     });
@@ -743,7 +752,68 @@ function atualizarPainel() {
   if ($("#quantidadeSemanas")) {
     $("#quantidadeSemanas").textContent = resumo.quantidadeSemanas;
   }
+
+  // Calcula somente os consumos registrados hoje
+  const totais = {
+    kcal: 0,
+    proteinas: 0,
+    carboidratos: 0,
+    gorduras: 0
+  };
+
+  const consumosHoje = listarConsumos().filter(consumo => consumo.data === hoje);
+
+  consumosHoje.forEach(consumo => {
+    let nutrientes = null;
+    let multiplicador = 1;
+
+    if (consumo.tipo === "prato") {
+      const prato = buscarPrato(consumo.pratoId);
+
+      if (!prato) return;
+
+      nutrientes = calcularNutrientes(prato.ingredientes);
+      multiplicador = Number(consumo.porcoes) || 1;
+    }
+
+    if (consumo.tipo === "alimento") {
+      nutrientes = calcularNutrientes([{
+        alimentoId: consumo.alimentoId,
+        quantidade: consumo.quantidade
+      }]);
+    }
+
+    if (!nutrientes) return;
+
+    Object.keys(totais).forEach(chave => {
+      totais[chave] += (Number(nutrientes[chave]) || 0) * multiplicador;
+    });
+  });
+
+  // Atualiza os números exibidos na tela inicial
+  if ($("#totalKcal")) {
+    $("#totalKcal").textContent = formatarNumero(totais.kcal);
+  }
+
+  if ($("#totalProteinas")) {
+    $("#totalProteinas").textContent = formatarNumero(totais.proteinas) + " g";
+  }
+
+  if ($("#totalCarboidratos")) {
+    $("#totalCarboidratos").textContent = formatarNumero(totais.carboidratos) + " g";
+  }
+
+  if ($("#totalGorduras")) {
+    $("#totalGorduras").textContent = formatarNumero(totais.gorduras) + " g";
+  }
+
+  if ($("#textoKcal")) {
+    $("#textoKcal").textContent = consumosHoje.length > 0
+      ? "Nutrientes somados a partir do que você registrou hoje. ♡"
+      : "Você ainda não registrou consumos hoje. ♡";
+  }
 }
+
 
 function mostrarMensagem(container, mensagem, tipo = "") {
   const elemento = criarElemento("div", "mensagem-status" + (tipo ? " " + tipo : ""), mensagem);
@@ -998,6 +1068,7 @@ function mostrarInicio() {
   });
 
   atualizarNavegacao("inicio");
+    atualizarPainel();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
