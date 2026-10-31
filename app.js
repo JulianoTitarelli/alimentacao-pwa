@@ -2225,7 +2225,7 @@ secao.append(cartaoData);
       criarElemento(
         "div",
         "texto-vazio",
-        ""Nenhum consumo registrado neste dia. Comece adicionando sua primeira refeição! ♡""
+        "Nenhum consumo registrado neste dia. Comece adicionando sua primeira refeição! ♡"
       )
     );
   }
