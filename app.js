@@ -217,6 +217,50 @@ function buscarAlimento(id) {
   const alimento = dados.alimentos.find(item => item.id === id);
   return alimento ? copiar(alimento) : null;
 }
+// =====================================================
+// LISTA DE MERCADO
+// =====================================================
+
+function gerarListaMercado(semanaId) {
+  const refeicoes = listarRefeicoes(semanaId);
+  const totais = new Map();
+
+  refeicoes.forEach(refeicao => {
+    const prato = buscarPrato(refeicao.pratoId);
+
+    if (!prato || !Array.isArray(prato.ingredientes)) {
+      return;
+    }
+
+    const porcoes = Number(refeicao.porcoes) || 1;
+
+    prato.ingredientes.forEach(ingrediente => {
+      const alimento = buscarAlimento(ingrediente.alimentoId);
+
+      if (!alimento) return;
+
+      const quantidade = Number(ingrediente.quantidade) * porcoes;
+
+      if (!Number.isFinite(quantidade)) return;
+
+      if (totais.has(alimento.id)) {
+        totais.get(alimento.id).quantidade += quantidade;
+      } else {
+        totais.set(alimento.id, {
+          id: alimento.id,
+          nome: alimento.nome,
+          categoria: alimento.categoria,
+          unidade: alimento.unidadeBase,
+          quantidade
+        });
+      }
+    });
+  });
+
+  return Array.from(totais.values()).sort((a, b) =>
+    a.nome.localeCompare(b.nome, "pt-BR")
+  );
+}
 
 function cadastrarAlimento({
   nome,
