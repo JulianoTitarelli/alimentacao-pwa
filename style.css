@@ -78,6 +78,18 @@ button {
   letter-spacing: 7px;
   opacity: 0.8;
 }
+/* =================================
+   CANTINHO DE BOAS-VINDAS
+================================= */
+
+.boas-vindas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 18px;
+  padding: 18px;
+  background: linear-gradient(135deg, #edf8ff, #f9d
 
 .sobretitulo {
   margin: 0 0 8px;
