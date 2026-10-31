@@ -428,7 +428,143 @@ function excluirRefeicao(semanaId, refeicaoId) {
 
   salvarDados();
 }
+function obterInicioDaSemana(data) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+    throw new Error("Data inválida. Use AAAA-MM-DD.");
+  }
 
+  const dataObj = new Date(data + "T12:00:00");
+
+  if (Number.isNaN(dataObj.getTime())) {
+    throw new Error("Data inválida.");
+  }
+
+  const dia = dataObj.getDay();
+  dataObj.setDate(dataObj.getDate() - dia);
+
+  const ano = dataObj.getFullYear();
+  const mes = String(dataObj.getMonth() + 1).padStart(2, "0");
+  const diaMes = String(dataObj.getDate()).padStart(2, "0");
+
+  return `${ano}-${mes}-${diaMes}`;
+}
+
+function registrarConsumoPrato({
+  semanaId,
+  refeicaoId,
+  porcoes
+}) {
+  const semana = dados.semanas.find(item => item.id === semanaId);
+
+  if (!semana) {
+    throw new Error("Semana não encontrada.");
+  }
+
+  const refeicao = semana.refeicoes.find(
+    item => item.id === refeicaoId
+  );
+
+  if (!refeicao) {
+    throw new Error("Refeição planejada não encontrada.");
+  }
+
+  const jaRegistrado = dados.consumos.some(
+    item => item.refeicaoId === refeicaoId
+  );
+
+  if (jaRegistrado) {
+    throw new Error("Esta refeição já foi registrada como consumida.");
+  }
+
+  const prato = buscarPrato(refeicao.pratoId);
+
+  if (!prato) {
+    throw new Error("Prato não encontrado.");
+  }
+
+  const quantidade = numeroValido(
+    porcoes ?? refeicao.porcoes,
+    "Porções consumidas"
+  );
+
+  if (quantidade <= 0) {
+    throw new Error("Informe pelo menos uma porção.");
+  }
+
+  const consumo = {
+    id: gerarId(),
+    tipo: "prato",
+    data: refeicao.data,
+    semanaInicio: obterInicioDaSemana(refeicao.data),
+    refeicaoId,
+    pratoId: refeicao.pratoId,
+    porcoes: quantidade,
+    criadoEm: new Date().toISOString()
+  };
+
+  dados.consumos.push(consumo);
+  salvarDados();
+
+  return copiar(consumo);
+}
+
+function registrarConsumoAlimento({
+  data,
+  alimentoId,
+  quantidade
+}) {
+  const alimento = buscarAlimento(alimentoId);
+
+  if (!alimento) {
+    throw new Error("Alimento não encontrado.");
+  }
+
+  const quantidadeValida = numeroValido(
+    quantidade,
+    "Quantidade consumida"
+  );
+
+  if (quantidadeValida <= 0) {
+    throw new Error("Informe uma quantidade maior que zero.");
+  }
+
+  const consumo = {
+    id: gerarId(),
+    tipo: "alimento",
+    data,
+    semanaInicio: obterInicioDaSemana(data),
+    alimentoId,
+    quantidade: quantidadeValida,
+    criadoEm: new Date().toISOString()
+  };
+
+  dados.consumos.push(consumo);
+  salvarDados();
+
+  return copiar(consumo);
+}
+
+function listarConsumos(semanaInicio = null) {
+  return copiar(dados.consumos)
+    .filter(consumo =>
+      !semanaInicio || consumo.semanaInicio === semanaInicio
+    )
+    .sort((a, b) => {
+      const comparacao = a.data.localeCompare(b.data);
+
+      return comparacao !== 0
+        ? comparacao
+        : a.criadoEm.localeCompare(b.criadoEm);
+    });
+}
+
+function excluirConsumo(id) {
+  dados.consumos = dados.consumos.filter(
+    consumo => consumo.id !== id
+  );
+
+  salvarDados();
+}
 function obterResumo() {
   return {
     quantidadeAlimentos: dados.alimentos.length,
@@ -439,6 +575,11 @@ function obterResumo() {
 }
 
 window.Alimentacao = Object.freeze({
+  obterInicioDaSemana,
+  registrarConsumoPrato,
+  registrarConsumoAlimento,
+  listarConsumos,
+  excluirConsumo,
   adicionarRefeicao,
   listarRefeicoes,
   excluirRefeicao,
