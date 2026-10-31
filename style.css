@@ -57,6 +57,16 @@ button {
   border-bottom: 2px dashed #b9dced;
   border-radius: 0 0 32px 32px;
 }
+.topo > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.topo .mascote {
+  flex: 0 0 88px;
+  width: 88px;
+  height: 88px;
+}
 
 .topo::after {
   content: "♡   ✧   ♡";
