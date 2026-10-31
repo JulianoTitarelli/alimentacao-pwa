@@ -165,6 +165,38 @@ return {
 
 let dados = carregarDados();
 
+function carregarCatalogoNutricional() {
+    let alterou = false;
+
+    catalogoNutricional.forEach(item => {
+        const nomeNormalizado = item.nome.trim().toLowerCase();
+
+        const jaExiste = dados.alimentos.some(alimento =>
+            alimento.nome.trim().toLowerCase() === nomeNormalizado
+        );
+
+        if (jaExiste) return;
+
+        dados.alimentos.push({
+            id: crypto.randomUUID(),
+            nome: item.nome,
+            categoria: item.categoria,
+            unidadeBase: item.unidadeBase,
+            nutrientes: { ...item.nutrientes },
+            origem: "catalogo",
+            criadoEm: new Date().toISOString()
+        });
+
+        alterou = true;
+    });
+
+    if (alterou) {
+        salvarDados();
+    }
+}
+
+carregarCatalogoNutricional();
+
 function salvarDados() {
   try {
     localStorage.setItem(CHAVE_DADOS, JSON.stringify(dados));
