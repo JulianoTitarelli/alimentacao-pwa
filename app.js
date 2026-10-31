@@ -3,6 +3,75 @@
 
 const CHAVE_DADOS = "minhaAlimentacao_dados_v1";
 
+const catalogoNutricional = [
+    // CEREAIS E TUBÉRCULOS
+    { nome: "Arroz branco cozido", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 130.85, proteinas: 2.45, carboidratos: 30, gorduras: 0.35 } },
+    { nome: "Cuscuz cozido", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 113.22, proteinas: 2.33, carboidratos: 24.81, gorduras: 0.31 } },
+    { nome: "Macarrão cozido", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 157.64, proteinas: 5.53, carboidratos: 30.63, gorduras: 1.08 } },
+    { nome: "Batata-doce cozida", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 77.38, proteinas: 0.69, carboidratos: 17.85, gorduras: 0.11 } },
+    { nome: "Batata inglesa cozida", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 52, proteinas: 1.2, carboidratos: 12, gorduras: 0.1 } },
+    { nome: "Mandioca cozida", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 125, proteinas: 0.6, carboidratos: 30, gorduras: 0.3 } },
+    { nome: "Inhame cozido", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 97, proteinas: 2, carboidratos: 23, gorduras: 0.1 } },
+    { nome: "Pão francês", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 270, proteinas: 9, carboidratos: 52, gorduras: 3 } },
+    { nome: "Pão integral", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 270, proteinas: 10, carboidratos: 52, gorduras: 3 } },
+    { nome: "Aveia", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 395, proteinas: 13.71, carboidratos: 67.14, gorduras: 8.57 } },
+    { nome: "Polenta cozida", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 70, proteinas: 1.5, carboidratos: 15, gorduras: 0.5 } },
+    { nome: "Tapioca (goma hidratada)", categoria: "Cereais e tubérculos", unidadeBase: "g", nutrientes: { kcal: 230, proteinas: 0, carboidratos: 56, gorduras: 0 } },
+
+    // LEGUMINOSAS
+    { nome: "Feijão cozido", categoria: "Leguminosas", unidadeBase: "g", nutrientes: { kcal: 76.7, proteinas: 4.75, carboidratos: 13.65, gorduras: 0.52 } },
+    { nome: "Grão-de-bico cozido", categoria: "Leguminosas", unidadeBase: "g", nutrientes: { kcal: 164.1, proteinas: 8.93, carboidratos: 27.42, gorduras: 2.63 } },
+    { nome: "Lentilha cozida", categoria: "Leguminosas", unidadeBase: "g", nutrientes: { kcal: 93.33, proteinas: 6.37, carboidratos: 15.93, gorduras: 0.44 } },
+    { nome: "Proteína de soja preparada", categoria: "Leguminosas", unidadeBase: "g", nutrientes: { kcal: 103.7, proteinas: 15.19, carboidratos: 8.52, gorduras: 2.22 } },
+
+    // PROTEÍNAS
+    { nome: "Frango grelhado", categoria: "Proteínas", unidadeBase: "g", nutrientes: { kcal: 159.07, proteinas: 31.11, carboidratos: 0, gorduras: 3.11 } },
+    { nome: "Frango desfiado", categoria: "Proteínas", unidadeBase: "g", nutrientes: { kcal: 160, proteinas: 31.6, carboidratos: 0, gorduras: 3.2 } },
+    { nome: "Frango na sopa", categoria: "Proteínas", unidadeBase: "g", nutrientes: { kcal: 159.09, proteinas: 30.91, carboidratos: 0, gorduras: 3.09 } },
+    { nome: "Ovos inteiros", categoria: "Proteínas", unidadeBase: "g", nutrientes: { kcal: 143, proteinas: 13, carboidratos: 0.7, gorduras: 9.5 } },
+    { nome: "Ovo cozido", categoria: "Proteínas", unidadeBase: "g", nutrientes: { kcal: 144, proteinas: 13, carboidratos: 0.8, gorduras: 9.6 } },
+    { nome: "Sardinha em conserva", categoria: "Proteínas", unidadeBase: "g", nutrientes: { kcal: 166.5, proteinas: 25.04, carboidratos: 0, gorduras: 7.23 } },
+    { nome: "Atum em água escorrido", categoria: "Proteínas", unidadeBase: "g", nutrientes: { kcal: 116.67, proteinas: 25, carboidratos: 0, gorduras: 1.1 } },
+    { nome: "Carne moída magra", categoria: "Proteínas", unidadeBase: "g", nutrientes: { kcal: 190, proteinas: 25.91, carboidratos: 0, gorduras: 9.09 } },
+
+    // LATICÍNIOS
+    { nome: "Leite integral", categoria: "Laticínios", unidadeBase: "ml", nutrientes: { kcal: 61, proteinas: 3.25, carboidratos: 5, gorduras: 3.25 } },
+    { nome: "Leite desnatado", categoria: "Laticínios", unidadeBase: "ml", nutrientes: { kcal: 35, proteinas: 3, carboidratos: 5, gorduras: 0 } },
+    { nome: "Iogurte natural integral", categoria: "Laticínios", unidadeBase: "g", nutrientes: { kcal: 56.47, proteinas: 3.82, carboidratos: 4.71, gorduras: 2.35 } },
+    { nome: "Iogurte natural", categoria: "Laticínios", unidadeBase: "g", nutrientes: { kcal: 56.47, proteinas: 3.82, carboidratos: 4.71, gorduras: 2.35 } },
+    { nome: "Queijo branco", categoria: "Laticínios", unidadeBase: "g", nutrientes: { kcal: 262.5, proteinas: 17.5, carboidratos: 2.5, gorduras: 20 } },
+
+    // FRUTAS
+    { nome: "Banana", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 88.78, proteinas: 1.03, carboidratos: 22.67, gorduras: 0.16 } },
+    { nome: "Maçã", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 56.15, proteinas: 0.31, carboidratos: 15, gorduras: 0.15 } },
+    { nome: "Mamão", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 40, proteinas: 0.51, carboidratos: 10, gorduras: 0.11 } },
+    { nome: "Laranja", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 42.86, proteinas: 0.86, carboidratos: 10.71, gorduras: 0.07 } },
+    { nome: "Tangerina", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 46.43, proteinas: 0.79, carboidratos: 11.43, gorduras: 0.07 } },
+    { nome: "Melancia", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 30, proteinas: 0.6, carboidratos: 7.5, gorduras: 0.1 } },
+    { nome: "Melão", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 34, proteinas: 0.7, carboidratos: 8.5, gorduras: 0.1 } },
+    { nome: "Abacaxi", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 50, proteinas: 0.53, carboidratos: 13, gorduras: 0.13 } },
+    { nome: "Goiaba", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 68, proteinas: 2.6, carboidratos: 14, gorduras: 1 } },
+    { nome: "Morango", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 32, proteinas: 0.67, carboidratos: 7.67, gorduras: 0.33 } },
+    { nome: "Pera", categoria: "Frutas", unidadeBase: "g", nutrientes: { kcal: 57.14, proteinas: 0.36, carboidratos: 15, gorduras: 0.14 } },
+
+    // VERDURAS E LEGUMES
+    { nome: "Abóbora cabotiá cozida", categoria: "Verduras e legumes", unidadeBase: "g", nutrientes: { kcal: 48, proteinas: 1.4, carboidratos: 12, gorduras: 0.7 } },
+    { nome: "Couve cozida", categoria: "Verduras e legumes", unidadeBase: "g", nutrientes: { kcal: 27, proteinas: 2.9, carboidratos: 4.3, gorduras: 0.5 } },
+    { nome: "Alface", categoria: "Verduras e legumes", unidadeBase: "g", nutrientes: { kcal: 15, proteinas: 1.4, carboidratos: 2.9, gorduras: 0.2 } },
+    { nome: "Cenoura cozida", categoria: "Verduras e legumes", unidadeBase: "g", nutrientes: { kcal: 35, proteinas: 0.8, carboidratos: 8.2, gorduras: 0.2 } },
+    { nome: "Beterraba cozida", categoria: "Verduras e legumes", unidadeBase: "g", nutrientes: { kcal: 44, proteinas: 1.7, carboidratos: 10, gorduras: 0.2 } },
+    { nome: "Abobrinha cozida", categoria: "Verduras e legumes", unidadeBase: "g", nutrientes: { kcal: 15, proteinas: 1.1, carboidratos: 3.1, gorduras: 0.3 } },
+    { nome: "Brócolis cozido", categoria: "Verduras e legumes", unidadeBase: "g", nutrientes: { kcal: 25, proteinas: 2.1, carboidratos: 4.4, gorduras: 0.5 } },
+    { nome: "Tomate", categoria: "Verduras e legumes", unidadeBase: "g", nutrientes: { kcal: 18, proteinas: 0.9, carboidratos: 3.9, gorduras: 0.2 } },
+    { nome: "Legumes e verduras", categoria: "Verduras e legumes", unidadeBase: "g", nutrientes: { kcal: 36.5, proteinas: 1.75, carboidratos: 7.25, gorduras: 0.35 } },
+    { nome: "Salada crua", categoria: "Verduras e legumes", unidadeBase: "g", nutrientes: { kcal: 20.87, proteinas: 1.22, carboidratos: 3.91, gorduras: 0.26 } },
+
+    // OUTROS
+    { nome: "Molho de tomate", categoria: "Outros", unidadeBase: "g", nutrientes: { kcal: 40, proteinas: 1.5, carboidratos: 8, gorduras: 0.5 } },
+    { nome: "Sopa de legumes", categoria: "Outros", unidadeBase: "g", nutrientes: { kcal: 36, proteinas: 1.33, carboidratos: 7.2, gorduras: 0.48 } },
+    { nome: "Amendoim torrado", categoria: "Outros", unidadeBase: "g", nutrientes: { kcal: 570, proteinas: 26, carboidratos: 16, gorduras: 49 } },
+    { nome: "Azeite ou óleo", categoria: "Outros", unidadeBase: "ml", nutrientes: { kcal: 800, proteinas: 0, carboidratos: 0, gorduras: 90 } }
+];
 
 const dadosIniciais = {
   versao: 1,
