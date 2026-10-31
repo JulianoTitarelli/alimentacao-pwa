@@ -312,12 +312,105 @@ function buscarSemana(id) {
   return semana ? copiar(semana) : null;
 }
 
-function selecionarSemana(id) {
-  if (!dados.semanas.some(semana => semana.id === id)) {
+function adicionarRefeicao({
+  semanaId,
+  data,
+  tipo,
+  pratoId,
+  porcoes = 1
+}) {
+  const semana = dados.semanas.find(item => item.id === semanaId);
+
+  if (!semana) {
     throw new Error("Semana não encontrada.");
   }
 
-  dados.preferencias.semanaAtivaId = id;
+  const dataValida = new Date(data + "T12:00:00");
+  const inicio = new Date(semana.inicio + "T12:00:00");
+  const fim = new Date(inicio);
+  fim.setDate(fim.getDate() + 6);
+
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(data) ||
+    Number.isNaN(dataValida.getTime()) ||
+    data < semana.inicio ||
+    dataValida > fim
+  ) {
+    throw new Error("Escolha uma data dentro da semana selecionada.");
+  }
+
+  const prato = dados.pratos.find(item => item.id === pratoId);
+
+  if (!prato) {
+    throw new Error("Prato não encontrado.");
+  }
+
+  const quantidadePorcoes = numeroValido(porcoes, "Quantidade de porções");
+
+  if (quantidadePorcoes <= 0) {
+    throw new Error("Informe pelo menos uma porção.");
+  }
+
+  const tiposPermitidos = [
+    "Café da manhã",
+    "Lanche",
+    "Almoço",
+    "Jantar"
+  ];
+
+  if (!tiposPermitidos.includes(tipo)) {
+    throw new Error("Tipo de refeição inválido.");
+  }
+
+  if (
+    prato.origem === "semana" &&
+    prato.semanaId !== semanaId
+  ) {
+    throw new Error("Este prato pertence a outra semana.");
+  }
+
+  const refeicao = {
+    id: gerarId(),
+    data,
+    tipo,
+    pratoId,
+    porcoes: quantidadePorcoes,
+    criadaEm: new Date().toISOString()
+  };
+
+  semana.refeicoes.push(refeicao);
+  salvarDados();
+
+  return copiar(refeicao);
+}
+
+function listarRefeicoes(semanaId) {
+  const semana = dados.semanas.find(item => item.id === semanaId);
+
+  if (!semana) {
+    throw new Error("Semana não encontrada.");
+  }
+
+  return copiar(semana.refeicoes).sort((a, b) => {
+    const comparacaoData = a.data.localeCompare(b.data);
+
+    if (comparacaoData !== 0) return comparacaoData;
+
+    return a.tipo.localeCompare(b.tipo, "pt-BR");
+  });
+}
+
+function excluirRefeicao(semanaId, refeicaoId) {
+  const semana = dados.semanas.find(item => item.id === semanaId);
+
+  if (!semana) {
+    throw new Error("Semana não encontrada.");
+  }
+
+  semana.refeicoes = semana.refeicoes.filter(
+    refeicao => refeicao.id !== refeicaoId
+  );
+
   salvarDados();
 }
 
