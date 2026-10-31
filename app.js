@@ -649,6 +649,7 @@ function mostrarInicio() {
 }
 
 
+
 function abrirTela(tela) {
   if (tela === "inicio") {
     mostrarInicio();
@@ -675,8 +676,19 @@ function abrirTela(tela) {
     return;
   }
 
+  if (tela === "semanas") {
+    document.querySelectorAll("#conteudo > section:not(#telaDinamica)").forEach(secao => {
+      secao.hidden = true;
+    });
+
+    renderizarSemanas();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
   alert("Esta área será implementada na próxima etapa. ♡");
 }
+
 
 
 function configurarNavegacao() {
@@ -994,4 +1006,154 @@ function renderizarPratos() {
       "erro"
     );
   }
+}
+
+/* =========================================
+   CARDÁPIOS SEMANAIS
+========================================= */
+
+function renderizarSemanas() {
+  const tela = $("#telaDinamica");
+  tela.replaceChildren();
+  tela.hidden = false;
+
+  const secao = criarElemento("section", "tela-interna");
+  const cabecalho = criarElemento("div", "cabecalho-tela");
+  const titulo = document.createElement("div");
+
+  titulo.append(criarElemento("p", "sobretitulo", "ORGANIZE SUA ROTINA"));
+  titulo.append(criarElemento("h2", "", "Cardápios semanais"));
+  titulo.append(criarElemento("p", "subtitulo", "Planeje suas refeições semana por semana."));
+
+  const voltar = criarElemento("button", "botao-voltar", "‹ Início");
+  voltar.type = "button";
+  voltar.addEventListener("click", mostrarInicio);
+
+  cabecalho.append(titulo, voltar);
+  secao.append(cabecalho);
+
+  const cartao = criarElemento("div", "cartao-formulario");
+  cartao.append(criarElemento("h3", "", "♡ Criar nova semana"));
+
+  const formulario = document.createElement("form");
+
+  const nome = criarCampo({
+    rotulo: "Nome do planejamento",
+    nome: "nomeSemana",
+    valor: "Minha semana",
+    obrigatorio: true
+  });
+
+  const inicio = criarCampo({
+    rotulo: "Primeiro dia da semana",
+    nome: "inicioSemana",
+    tipo: "date",
+    obrigatorio: true
+  });
+
+  formulario.append(nome.campo, inicio.campo);
+
+  const salvar = criarElemento("button", "botao-principal", "♡ Criar semana");
+  salvar.type = "submit";
+  formulario.append(salvar);
+
+  formulario.addEventListener("submit", evento => {
+    evento.preventDefault();
+
+    try {
+      criarSemana({
+        nome: nome.entrada.value,
+        inicio: inicio.entrada.value
+      });
+
+      renderizarSemanas();
+      atualizarPainel();
+
+      mostrarMensagem(
+        $("#telaDinamica .tela-interna"),
+        "Semana criada com sucesso! ♡",
+        "sucesso"
+      );
+    } catch (erro) {
+      mostrarMensagem(secao, erro.message, "erro");
+    }
+  });
+
+  cartao.append(formulario);
+  secao.append(cartao);
+
+  secao.append(criarElemento("h3", "", "Minhas semanas"));
+
+  const lista = criarElemento("div", "lista-cadastros");
+  const semanas = listarSemanas();
+  const resumo = obterResumo();
+
+  if (semanas.length === 0) {
+    lista.append(
+      criarElemento(
+        "div",
+        "texto-vazio",
+        "Você ainda não criou um planejamento semanal. Comece pelo formulário acima."
+      )
+    );
+  }
+
+  semanas.forEach(semana => {
+    const item = criarElemento("article", "item-cadastro");
+    const conteudo = criarElemento("div", "item-cadastro-conteudo");
+
+    const dataInicio = new Date(semana.inicio + "T12:00:00");
+    const dataFim = new Date(dataInicio);
+    dataFim.setDate(dataFim.getDate() + 6);
+
+    const periodo =
+      dataInicio.toLocaleDateString("pt-BR") +
+      " até " +
+      dataFim.toLocaleDateString("pt-BR");
+
+    if (semana.id === resumo.semanaAtiva?.id) {
+      conteudo.append(criarElemento("span", "etiqueta", "Semana ativa ♡"));
+    }
+
+    conteudo.append(criarElemento("h4", "", semana.nome));
+    conteudo.append(criarElemento("p", "", periodo));
+    conteudo.append(
+      criarElemento(
+        "p",
+        "",
+        semana.refeicoes.length + " refeições planejadas"
+      )
+    );
+
+    const botoes = criarElemento("div", "grade-campos");
+
+    if (semana.id !== resumo.semanaAtiva?.id) {
+      const ativar = criarElemento("button", "botao-secundario", "Selecionar semana");
+      ativar.type = "button";
+
+      ativar.addEventListener("click", () => {
+        try {
+          selecionarSemana(semana.id);
+          renderizarSemanas();
+          atualizarPainel();
+        } catch (erro) {
+          mostrarMensagem(secao, erro.message, "erro");
+        }
+      });
+
+      botoes.append(ativar);
+    }
+
+    item.append(conteudo);
+
+    if (botoes.children.length > 0) {
+      item.append(botoes);
+    }
+
+    lista.append(item);
+  });
+
+  secao.append(lista);
+  tela.append(secao);
+  atualizarNavegacao("semanas");
 }
