@@ -1019,6 +1019,16 @@ function abrirTela(tela) {
     return;
   }
 
+      if (tela === "consumo") {
+    document.querySelectorAll("#conteudo > section:not(#telaDinamica)").forEach(secao => {
+      secao.hidden = true;
+    });
+
+    renderizarConsumo();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
   if (tela === "pratos") {
     document.querySelectorAll("#conteudo > section:not(#telaDinamica)").forEach(secao => {
       secao.hidden = true;
@@ -1727,4 +1737,447 @@ function renderizarSemanas() {
   tela.append(secao);
   atualizarNavegacao("semanas");
 }
+
+
+function renderizarConsumo() {
+  const tela = $("#telaDinamica");
+  tela.replaceChildren();
+  tela.hidden = false;
+
+  const secao = criarElemento("section", "tela-interna");
+  const cabecalho = criarElemento("div", "cabecalho-tela");
+  const titulo = document.createElement("div");
+
+  titulo.append(criarElemento("p", "sobretitulo", "ACOMPANHE SUA ALIMENTAÇÃO"));
+  titulo.append(criarElemento("h2", "", "Meu consumo"));
+  titulo.append(
+    criarElemento("p", "subtitulo", "Registre o que você realmente consumiu.")
+  );
+
+  const voltar = criarElemento("button", "botao-voltar", "‹ Início");
+  voltar.type = "button";
+  voltar.addEventListener("click", mostrarInicio);
+
+  cabecalho.append(titulo, voltar);
+  secao.append(cabecalho);
+
+  const resumo = obterResumo();
+  const semanaAtiva = resumo.semanaAtiva;
+
+  const semanaInicio = semanaAtiva
+    ? obterInicioDaSemana(semanaAtiva.inicio)
+    : obterInicioDaSemana(
+        new Date().getFullYear() + "-" +
+        String(new Date().getMonth() + 1).padStart(2, "0") + "-" +
+        String(new Date().getDate()).padStart(2, "0")
+      );
+
+  // RESUMO NUTRICIONAL
+
+  const consumos = listarConsumos(semanaInicio);
+
+  const totais = {
+    kcal: 0,
+    proteinas: 0,
+    carboidratos: 0,
+    gorduras: 0
+  };
+
+  consumos.forEach(consumo => {
+    let nutrientes;
+
+    if (consumo.tipo === "prato") {
+      const prato = buscarPrato(consumo.pratoId);
+      if (!prato) return;
+
+      nutrientes = calcularNutrientes(prato.ingredientes);
+
+      Object.keys(totais).forEach(chave => {
+        totais[chave] += nutrientes[chave] * consumo.porcoes;
+      });
+    }
+
+    if (consumo.tipo === "alimento") {
+      nutrientes = calcularNutrientes([{
+        alimentoId: consumo.alimentoId,
+        quantidade: consumo.quantidade
+      }]);
+
+      Object.keys(totais).forEach(chave => {
+        totais[chave] += nutrientes[chave];
+      });
+    }
+  });
+
+  const cartaoResumo = criarElemento("div", "cartao-formulario");
+
+  cartaoResumo.append(
+    criarElemento("h3", "", "♡ Resumo nutricional")
+  );
+
+  cartaoResumo.append(
+    criarElemento(
+      "p",
+      "subtitulo",
+      semanaAtiva
+        ? "Semana: " + semanaAtiva.nome
+        : "Consumo da semana atual"
+    )
+  );
+
+  const gradeNutrientes = criarElemento("div", "lista-cadastros");
+
+  [
+    ["Calorias", totais.kcal, "kcal"],
+    ["Proteínas", totais.proteinas, "g"],
+    ["Carboidratos", totais.carboidratos, "g"],
+    ["Gorduras", totais.gorduras, "g"]
+  ].forEach(([nome, valor, unidade]) => {
+    const item = criarElemento("article", "item-cadastro");
+    item.append(criarElemento("h4", "", nome));
+    item.append(
+      criarElemento("p", "", formatarNumero(valor) + " " + unidade)
+    );
+    gradeNutrientes.append(item);
+  });
+
+  cartaoResumo.append(gradeNutrientes);
+  secao.append(cartaoResumo);
+
+  // REGISTRAR PRATO PLANEJADO
+
+  const cartaoPrato = criarElemento("div", "cartao-formulario");
+  cartaoPrato.append(
+    criarElemento("h3", "", "♡ Registrar refeição planejada")
+  );
+
+  if (semanaAtiva) {
+    const refeicoes = listarRefeicoes(semanaAtiva.id);
+
+    const formularioPrato = document.createElement("form");
+
+    const campoRefeicao = criarElemento("div", "campo");
+    const labelRefeicao = criarElemento("label", "", "Refeição do cardápio");
+
+    const seletorRefeicao = document.createElement("select");
+    seletorRefeicao.name = "refeicaoConsumo";
+    seletorRefeicao.required = true;
+
+    const opcaoInicial = document.createElement("option");
+    opcaoInicial.value = "";
+    opcaoInicial.textContent = "Selecione uma refeição";
+    seletorRefeicao.append(opcaoInicial);
+
+    refeicoes.forEach(refeicao => {
+      const jaRegistrado = consumos.some(
+        consumo => consumo.refeicaoId === refeicao.id
+      );
+
+      if (jaRegistrado) return;
+
+      const prato = buscarPrato(refeicao.pratoId);
+      if (!prato) return;
+
+      const opcao = document.createElement("option");
+      opcao.value = refeicao.id;
+
+      opcao.textContent =
+        new Date(refeicao.data + "T12:00:00").toLocaleDateString("pt-BR") +
+        " · " + refeicao.tipo + " · " + prato.nome;
+
+      seletorRefeicao.append(opcao);
+    });
+
+    campoRefeicao.append(labelRefeicao, seletorRefeicao);
+
+    const porcoes = criarCampo({
+      rotulo: "Porções realmente consumidas",
+      nome: "porcoesConsumidas",
+      tipo: "number",
+      valor: "1",
+      obrigatorio: true
+    });
+
+    porcoes.entrada.min = "0.01";
+    porcoes.entrada.step = "0.01";
+
+    formularioPrato.append(campoRefeicao, porcoes.campo);
+
+    const registrar = criarElemento(
+      "button",
+      "botao-principal",
+      "♡ Registrar consumo"
+    );
+
+    registrar.type = "submit";
+    formularioPrato.append(registrar);
+
+    formularioPrato.addEventListener("submit", evento => {
+      evento.preventDefault();
+
+      try {
+        const refeicao = refeicoes.find(
+          item => item.id === seletorRefeicao.value
+        );
+
+        if (!refeicao) {
+          throw new Error("Selecione uma refeição válida.");
+        }
+
+        registrarConsumoPrato({
+          semanaId: semanaAtiva.id,
+          refeicaoId: refeicao.id,
+          porcoes: porcoes.entrada.value
+        });
+
+        renderizarConsumo();
+        atualizarPainel();
+
+        mostrarMensagem(
+          $("#telaDinamica .tela-interna"),
+          "Consumo registrado com sucesso! ♡",
+          "sucesso"
+        );
+      } catch (erro) {
+        mostrarMensagem(secao, erro.message, "erro");
+      }
+    });
+
+    if (refeicoes.length === 0) {
+      cartaoPrato.append(
+        criarElemento(
+          "p",
+          "texto-vazio",
+          "Esta semana ainda não possui refeições planejadas."
+        )
+      );
+    } else {
+      formularioPrato.querySelector("button").disabled =
+        seletorRefeicao.options.length <= 1;
+
+      cartaoPrato.append(formularioPrato);
+    }
+  } else {
+    cartaoPrato.append(
+      criarElemento(
+        "p",
+        "texto-vazio",
+        "Crie uma semana e planeje suas refeições para registrar pratos consumidos."
+      )
+    );
+  }
+
+  secao.append(cartaoPrato);
+
+  // REGISTRAR ALIMENTO AVULSO
+
+  const cartaoAlimento = criarElemento("div", "cartao-formulario");
+
+  cartaoAlimento.append(
+    criarElemento("h3", "", "♡ Registrar alimento avulso")
+  );
+
+  const formularioAlimento = document.createElement("form");
+
+  const campoAlimento = criarElemento("div", "campo");
+  const labelAlimento = criarElemento("label", "", "Alimento");
+
+  const seletorAlimento = document.createElement("select");
+  seletorAlimento.required = true;
+
+  const opcaoAlimento = document.createElement("option");
+  opcaoAlimento.value = "";
+  opcaoAlimento.textContent = "Selecione um alimento";
+  seletorAlimento.append(opcaoAlimento);
+
+  listarAlimentos().forEach(alimento => {
+    const opcao = document.createElement("option");
+    opcao.value = alimento.id;
+    opcao.textContent = alimento.nome;
+    seletorAlimento.append(opcao);
+  });
+
+  campoAlimento.append(labelAlimento, seletorAlimento);
+
+  const quantidade = criarCampo({
+    rotulo: "Quantidade consumida",
+    nome: "quantidadeConsumida",
+    tipo: "number",
+    obrigatorio: true
+  });
+
+  quantidade.entrada.min = "0.01";
+  quantidade.entrada.step = "0.01";
+
+  const dataAlimento = criarCampo({
+    rotulo: "Data do consumo",
+    nome: "dataConsumo",
+    tipo: "date",
+    valor: new Date().getFullYear() + "-" +
+      String(new Date().getMonth() + 1).padStart(2, "0") + "-" +
+      String(new Date().getDate()).padStart(2, "0"),
+    obrigatorio: true
+  });
+
+  formularioAlimento.append(
+    campoAlimento,
+    quantidade.campo,
+    dataAlimento.campo
+  );
+
+  const registrarAlimento = criarElemento(
+    "button",
+    "botao-principal",
+    "♡ Adicionar alimento"
+  );
+
+  registrarAlimento.type = "submit";
+  formularioAlimento.append(registrarAlimento);
+
+  formularioAlimento.addEventListener("submit", evento => {
+    evento.preventDefault();
+
+    try {
+      registrarConsumoAlimento({
+        data: dataAlimento.entrada.value,
+        alimentoId: seletorAlimento.value,
+        quantidade: quantidade.entrada.value
+      });
+
+      renderizarConsumo();
+      atualizarPainel();
+
+      mostrarMensagem(
+        $("#telaDinamica .tela-interna"),
+        "Alimento registrado com sucesso! ♡",
+        "sucesso"
+      );
+    } catch (erro) {
+      mostrarMensagem(secao, erro.message, "erro");
+    }
+  });
+
+  cartaoAlimento.append(formularioAlimento);
+  secao.append(cartaoAlimento);
+
+  // HISTÓRICO
+
+  secao.append(
+    criarElemento("h3", "", "Histórico de consumo da semana")
+  );
+
+  const lista = criarElemento("div", "lista-cadastros");
+
+  if (consumos.length === 0) {
+    lista.append(
+      criarElemento(
+        "div",
+        "texto-vazio",
+        "Nenhum consumo registrado nesta semana. Comece adicionando sua primeira refeição! ♡"
+      )
+    );
+  }
+
+  consumos.forEach(consumo => {
+    const item = criarElemento("article", "item-cadastro");
+    const conteudo = criarElemento("div", "item-cadastro-conteudo");
+
+    const dataFormatada = new Date(
+      consumo.data + "T12:00:00"
+    ).toLocaleDateString("pt-BR");
+
+    conteudo.append(
+      criarElemento(
+        "span",
+        "etiqueta",
+        consumo.tipo === "prato" ? "Refeição planejada" : "Alimento avulso"
+      )
+    );
+
+    let nome = "";
+    let nutrientes;
+
+    if (consumo.tipo === "prato") {
+      const prato = buscarPrato(consumo.pratoId);
+      if (!prato) return;
+
+      nome = prato.nome;
+      nutrientes = calcularNutrientes(prato.ingredientes);
+
+      Object.keys(nutrientes).forEach(chave => {
+        nutrientes[chave] *= consumo.porcoes;
+      });
+
+      conteudo.append(
+        criarElemento("h4", "", nome)
+      );
+
+      conteudo.append(
+        criarElemento(
+          "p",
+          "",
+          formatarNumero(consumo.porcoes) + " porções · " + dataFormatada
+        )
+      );
+    } else {
+      const alimento = buscarAlimento(consumo.alimentoId);
+      if (!alimento) return;
+
+      nome = alimento.nome;
+      nutrientes = calcularNutrientes([{
+        alimentoId: consumo.alimentoId,
+        quantidade: consumo.quantidade
+      }]);
+
+      conteudo.append(
+        criarElemento("h4", "", nome)
+      );
+
+      conteudo.append(
+        criarElemento(
+          "p",
+          "",
+          formatarNumero(consumo.quantidade) + " " +
+          alimento.unidadeBase + " · " + dataFormatada
+        )
+      );
+    }
+
+    conteudo.append(
+      criarElemento(
+        "p",
+        "",
+        formatarNumero(nutrientes.kcal) + " kcal · P " +
+        formatarNumero(nutrientes.proteinas) + " g · C " +
+        formatarNumero(nutrientes.carboidratos) + " g · G " +
+        formatarNumero(nutrientes.gorduras) + " g"
+      )
+    );
+
+    const excluir = criarElemento(
+      "button",
+      "botao-excluir",
+      "Excluir registro"
+    );
+
+    excluir.type = "button";
+
+    excluir.addEventListener("click", () => {
+      if (!confirm("Excluir este registro de consumo?")) return;
+
+      excluirConsumo(consumo.id);
+      renderizarConsumo();
+      atualizarPainel();
+    });
+
+    item.append(conteudo, excluir);
+    lista.append(item);
+  });
+
+  secao.append(lista);
+
+  tela.append(secao);
+  atualizarNavegacao("consumo");
+}
+
 
