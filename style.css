@@ -184,8 +184,6 @@ h1 {
   object-fit: contain;
   border-radius: 50%;
   display: block;
-}
-.imagem-mascote {
   transform: scale(1.12);
 }
 
