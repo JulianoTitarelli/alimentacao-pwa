@@ -102,16 +102,21 @@ h1 {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 51px;
-  height: 51px;
-  background: var(--rosa-claro);
-  border: 1px dashed var(--rosa);
-  border-radius: 50% 50% 45% 55%;
+  width: 88px;
+  height: 88px;
+  background: linear-gradient(145deg, #f9dce7, #fff1c7);
+  border: 2px dashed var(--rosa);
+  border-radius: 48% 52% 45% 55%;
   color: #b85f82;
-  font-family: Georgia, serif;
-  font-size: 22px;
+  font-size: 48px;
+  box-shadow: 0 6px 18px rgba(184, 95, 130, 0.12);
+  transform: rotate(5deg);
+  transition: transform 0.3s ease;
 }
 
+.marca:hover {
+  transform: rotate(0deg) scale(1.08);
+}
 main {
   width: 100%;
   max-width: 600px;
