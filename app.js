@@ -3,11 +3,13 @@
 
 const CHAVE_DADOS = "minhaAlimentacao_dados_v1";
 
+
 const dadosIniciais = {
   versao: 1,
   alimentos: [],
   pratos: [],
   semanas: [],
+  consumos: [],
   preferencias: {
     semanaAtivaId: null,
     metas: {
@@ -18,6 +20,7 @@ const dadosIniciais = {
     }
   }
 };
+
 
 function copiar(objeto) {
   return JSON.parse(JSON.stringify(objeto));
@@ -72,14 +75,19 @@ function carregarDados() {
       throw new Error("Estrutura de dados inválida.");
     }
 
-    return {
-      ...copiar(dadosIniciais),
-      ...dados,
-      preferencias: {
-        ...copiar(dadosIniciais.preferencias),
-        ...(dados.preferencias || {})
-      }
-    };
+    
+return {
+  ...copiar(dadosIniciais),
+  ...dados,
+  consumos: Array.isArray(dados.consumos)
+    ? dados.consumos
+    : [],
+  preferencias: {
+    ...copiar(dadosIniciais.preferencias),
+    ...(dados.preferencias || {})
+  }
+};
+
   } catch (erro) {
     console.error("Não foi possível carregar os dados:", erro);
     return copiar(dadosIniciais);
