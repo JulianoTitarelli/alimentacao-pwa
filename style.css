@@ -117,6 +117,32 @@ h1 {
 .marca:hover {
   transform: rotate(0deg) scale(1.08);
 }
+.mascote {
+  position: relative;
+}
+
+.mascote-gato {
+  position: relative;
+  z-index: 1;
+}
+
+.decoracao {
+  position: absolute;
+  color: #b85f82;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.decoracao-um {
+  top: 8px;
+  right: 7px;
+}
+
+.decoracao-dois {
+  bottom: 9px;
+  left: 8px;
+  font-size: 18px;
+}
 main {
   width: 100%;
   max-width: 600px;
