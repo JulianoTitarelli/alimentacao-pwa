@@ -1115,6 +1115,7 @@ function renderizarPratos() {
    CARDÁPIOS SEMANAIS
 ========================================= */
 
+
 function renderizarSemanas() {
   const tela = $("#telaDinamica");
   tela.replaceChildren();
@@ -1126,7 +1127,9 @@ function renderizarSemanas() {
 
   titulo.append(criarElemento("p", "sobretitulo", "ORGANIZE SUA ROTINA"));
   titulo.append(criarElemento("h2", "", "Cardápios semanais"));
-  titulo.append(criarElemento("p", "subtitulo", "Planeje suas refeições semana por semana."));
+  titulo.append(
+    criarElemento("p", "subtitulo", "Planeje suas refeições semana por semana.")
+  );
 
   const voltar = criarElemento("button", "botao-voltar", "‹ Início");
   voltar.type = "button";
@@ -1134,6 +1137,8 @@ function renderizarSemanas() {
 
   cabecalho.append(titulo, voltar);
   secao.append(cabecalho);
+
+  // CRIAR NOVA SEMANA
 
   const cartao = criarElemento("div", "cartao-formulario");
   cartao.append(criarElemento("h3", "", "♡ Criar nova semana"));
@@ -1185,6 +1190,8 @@ function renderizarSemanas() {
   cartao.append(formulario);
   secao.append(cartao);
 
+  // LISTAR SEMANAS
+
   secao.append(criarElemento("h3", "", "Minhas semanas"));
 
   const lista = criarElemento("div", "lista-cadastros");
@@ -1228,10 +1235,13 @@ function renderizarSemanas() {
       )
     );
 
-    const botoes = criarElemento("div", "grade-campos");
-
     if (semana.id !== resumo.semanaAtiva?.id) {
-      const ativar = criarElemento("button", "botao-secundario", "Selecionar semana");
+      const ativar = criarElemento(
+        "button",
+        "botao-secundario",
+        "Selecionar semana"
+      );
+
       ativar.type = "button";
 
       ativar.addEventListener("click", () => {
@@ -1244,19 +1254,227 @@ function renderizarSemanas() {
         }
       });
 
-      botoes.append(ativar);
-    }
-
-    item.append(conteudo);
-
-    if (botoes.children.length > 0) {
-      item.append(botoes);
+      item.append(conteudo, ativar);
+    } else {
+      item.append(conteudo);
     }
 
     lista.append(item);
   });
 
   secao.append(lista);
+
+  // PLANEJAR REFEIÇÕES DA SEMANA ATIVA
+
+  const semanaAtiva = resumo.semanaAtiva;
+
+  if (semanaAtiva) {
+    const cartaoRefeicoes = criarElemento("div", "cartao-formulario");
+
+    cartaoRefeicoes.append(
+      criarElemento("h3", "", "♡ Montar o cardápio")
+    );
+
+    cartaoRefeicoes.append(
+      criarElemento("p", "subtitulo", "Semana: " + semanaAtiva.nome)
+    );
+
+    const formularioRefeicao = document.createElement("form");
+
+    const dataInicio = new Date(semanaAtiva.inicio + "T12:00:00");
+    const dataFim = new Date(dataInicio);
+    dataFim.setDate(dataFim.getDate() + 6);
+
+    const dataFimTexto =
+      dataFim.getFullYear() +
+      "-" +
+      String(dataFim.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(dataFim.getDate()).padStart(2, "0");
+
+    const data = criarCampo({
+      rotulo: "Dia da refeição",
+      nome: "dataRefeicao",
+      tipo: "date",
+      valor: semanaAtiva.inicio,
+      obrigatorio: true
+    });
+
+    data.entrada.min = semanaAtiva.inicio;
+    data.entrada.max = dataFimTexto;
+
+    const tipo = criarCampo({
+      rotulo: "Tipo de refeição",
+      nome: "tipoRefeicao",
+      obrigatorio: true,
+      opcoes: [
+        { valor: "Café da manhã", texto: "Café da manhã" },
+        { valor: "Lanche", texto: "Lanche" },
+        { valor: "Almoço", texto: "Almoço" },
+        { valor: "Jantar", texto: "Jantar" }
+      ]
+    });
+
+    const pratos = listarPratos({ semanaId: semanaAtiva.id });
+
+    const campoPrato = criarElemento("div", "campo");
+    const labelPrato = criarElemento("label", "", "Prato");
+    labelPrato.htmlFor = "pratoRefeicao";
+
+    const seletorPrato = document.createElement("select");
+    seletorPrato.id = "pratoRefeicao";
+    seletorPrato.name = "pratoRefeicao";
+    seletorPrato.required = true;
+
+    const opcaoInicial = document.createElement("option");
+    opcaoInicial.value = "";
+    opcaoInicial.textContent = "Selecione um prato";
+    seletorPrato.append(opcaoInicial);
+
+    pratos.forEach(prato => {
+      const opcao = document.createElement("option");
+      opcao.value = prato.id;
+      opcao.textContent = prato.nome;
+      seletorPrato.append(opcao);
+    });
+
+    campoPrato.append(labelPrato, seletorPrato);
+
+    const porcoes = criarCampo({
+      rotulo: "Quantidade de porções",
+      nome: "porcoesRefeicao",
+      tipo: "number",
+      valor: "1",
+      obrigatorio: true
+    });
+
+    porcoes.entrada.min = "0.01";
+    porcoes.entrada.step = "0.01";
+
+    formularioRefeicao.append(
+      data.campo,
+      tipo.campo,
+      campoPrato,
+      porcoes.campo
+    );
+
+    const adicionar = criarElemento(
+      "button",
+      "botao-principal",
+      "♡ Adicionar ao cardápio"
+    );
+
+    adicionar.type = "submit";
+    formularioRefeicao.append(adicionar);
+
+    formularioRefeicao.addEventListener("submit", evento => {
+      evento.preventDefault();
+
+      try {
+        adicionarRefeicao({
+          semanaId: semanaAtiva.id,
+          data: data.entrada.value,
+          tipo: tipo.entrada.value,
+          pratoId: seletorPrato.value,
+          porcoes: porcoes.entrada.value
+        });
+
+        renderizarSemanas();
+
+        mostrarMensagem(
+          $("#telaDinamica .tela-interna"),
+          "Refeição adicionada ao cardápio! ♡",
+          "sucesso"
+        );
+      } catch (erro) {
+        mostrarMensagem(secao, erro.message, "erro");
+      }
+    });
+
+    cartaoRefeicoes.append(formularioRefeicao);
+    secao.append(cartaoRefeicoes);
+
+    // REFEIÇÕES PLANEJADAS
+
+    secao.append(criarElemento("h3", "", "Refeições da semana"));
+
+    const listaRefeicoes = criarElemento("div", "lista-cadastros");
+    const refeicoes = listarRefeicoes(semanaAtiva.id);
+
+    if (refeicoes.length === 0) {
+      listaRefeicoes.append(
+        criarElemento(
+          "div",
+          "texto-vazio",
+          "Seu cardápio ainda está vazio. Adicione a primeira refeição acima. ♡"
+        )
+      );
+    }
+
+    refeicoes.forEach(refeicao => {
+      const prato = buscarPrato(refeicao.pratoId);
+
+      if (!prato) return;
+
+      const item = criarElemento("article", "item-cadastro");
+      const conteudo = criarElemento("div", "item-cadastro-conteudo");
+
+      const dataFormatada = new Date(
+        refeicao.data + "T12:00:00"
+      ).toLocaleDateString("pt-BR", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit"
+      });
+
+      conteudo.append(
+        criarElemento("span", "etiqueta", refeicao.tipo)
+      );
+
+      conteudo.append(
+        criarElemento("h4", "", prato.nome)
+      );
+
+      conteudo.append(
+        criarElemento(
+          "p",
+          "",
+          dataFormatada + " · " + formatarNumero(refeicao.porcoes) +
+          (refeicao.porcoes === 1 ? " porção" : " porções")
+        )
+      );
+
+      const excluir = criarElemento(
+        "button",
+        "botao-excluir",
+        "Remover do cardápio"
+      );
+
+      excluir.type = "button";
+
+      excluir.addEventListener("click", () => {
+        if (!confirm("Remover esta refeição do cardápio?")) return;
+
+        excluirRefeicao(semanaAtiva.id, refeicao.id);
+        renderizarSemanas();
+      });
+
+      item.append(conteudo, excluir);
+      listaRefeicoes.append(item);
+    });
+
+    secao.append(listaRefeicoes);
+
+    if (pratos.length === 0) {
+      mostrarMensagem(
+        cartaoRefeicoes,
+        "Você ainda não tem pratos disponíveis. Cadastre pratos em Meus pratos para começar a montar o cardápio.",
+        "erro"
+      );
+    }
+  }
+
   tela.append(secao);
   atualizarNavegacao("semanas");
 }
+
