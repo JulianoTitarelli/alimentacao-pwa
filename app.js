@@ -311,7 +311,14 @@ function buscarSemana(id) {
   const semana = dados.semanas.find(item => item.id === id);
   return semana ? copiar(semana) : null;
 }
+function selecionarSemana(id) {
+  if (!dados.semanas.some(semana => semana.id === id)) {
+    throw new Error("Semana não encontrada.");
+  }
 
+  dados.preferencias.semanaAtivaId = id;
+  salvarDados();
+}
 function adicionarRefeicao({
   semanaId,
   data,
