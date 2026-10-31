@@ -415,6 +415,12 @@ h2 {
   font-weight: 800;
   box-shadow: 0 3px 8px rgba(80, 130, 160, 0.06);
 }
+.imagem-atalho {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  display: block;
+}
 
 .atalho-texto {
   display: flex;
