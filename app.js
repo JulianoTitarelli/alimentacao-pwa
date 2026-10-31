@@ -424,6 +424,9 @@ function obterResumo() {
 }
 
 window.Alimentacao = Object.freeze({
+  adicionarRefeicao,
+  listarRefeicoes,
+  excluirRefeicao,
   listarAlimentos,
   buscarAlimento,
   cadastrarAlimento,
