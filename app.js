@@ -2492,3 +2492,29 @@ function renderizarMercado() {
 
   atualizarNavegacao("mercado");
 }
+// =====================================
+// ESCONDER NAVEGAÇÃO AO ROLAR
+// =====================================
+
+(() => {
+  const navegacao = document.querySelector(".navegacao");
+
+  if (!navegacao) return;
+
+  let ultimaPosicao = window.scrollY;
+
+  window.addEventListener("scroll", () => {
+    const posicaoAtual = window.scrollY;
+    const diferenca = posicaoAtual - ultimaPosicao;
+
+    if (posicaoAtual < 50) {
+      navegacao.classList.remove("escondida");
+    } else if (diferenca > 5) {
+      navegacao.classList.add("escondida");
+    } else if (diferenca < -5) {
+      navegacao.classList.remove("escondida");
+    }
+
+    ultimaPosicao = posicaoAtual;
+  }, { passive: true });
+})();
