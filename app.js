@@ -1897,7 +1897,9 @@ const hojeFormatado =
 
 const dataConsulta = dataSelecionada || hojeFormatado;
 
-const consumos = listarConsumos().filter(
+const todosConsumos = listarConsumos();
+
+const consumos = todosConsumos.filter(
   consumo => consumo.data === dataConsulta
 );
 
@@ -2016,9 +2018,9 @@ secao.append(cartaoData);
     seletorRefeicao.append(opcaoInicial);
 
     refeicoes.forEach(refeicao => {
-      const jaRegistrado = consumos.some(
-        consumo => consumo.refeicaoId === refeicao.id
-      );
+      const jaRegistrado = todosConsumos.some(
+  consumo => consumo.refeicaoId === refeicao.id
+);
 
       if (jaRegistrado) return;
 
