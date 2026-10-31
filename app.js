@@ -1864,7 +1864,7 @@ function renderizarSemanas() {
 }
 
 
-function renderizarConsumo() {
+function renderizarConsumo(dataSelecionada = null) {
   const tela = $("#telaDinamica");
   tela.replaceChildren();
   tela.hidden = false;
@@ -1884,22 +1884,46 @@ function renderizarConsumo() {
   voltar.addEventListener("click", mostrarInicio);
 
   cabecalho.append(titulo, voltar);
-  secao.append(cabecalho);
+secao.append(cabecalho);
 
-  const resumo = obterResumo();
-  const semanaAtiva = resumo.semanaAtiva;
+const resumo = obterResumo();
+const semanaAtiva = resumo.semanaAtiva;
 
-  const semanaInicio = semanaAtiva
-    ? obterInicioDaSemana(semanaAtiva.inicio)
-    : obterInicioDaSemana(
-        new Date().getFullYear() + "-" +
-        String(new Date().getMonth() + 1).padStart(2, "0") + "-" +
-        String(new Date().getDate()).padStart(2, "0")
-      );
+const hoje = new Date();
+const hojeFormatado =
+  hoje.getFullYear() + "-" +
+  String(hoje.getMonth() + 1).padStart(2, "0") + "-" +
+  String(hoje.getDate()).padStart(2, "0");
 
+const dataConsulta = dataSelecionada || hojeFormatado;
+
+const consumos = listarConsumos().filter(
+  consumo => consumo.data === dataConsulta
+);
+
+const cartaoData = criarElemento("div", "cartao-formulario");
+cartaoData.append(
+  criarElemento("h3", "", "♡ Consultar um dia")
+);
+
+const campoData = criarCampo({
+  rotulo: "Data do consumo",
+  nome: "dataConsulta",
+  tipo: "date",
+  valor: dataConsulta,
+  obrigatorio: true
+});
+
+campoData.entrada.addEventListener("change", () => {
+  if (campoData.entrada.value) {
+    renderizarConsumo(campoData.entrada.value);
+  }
+});
+
+cartaoData.append(campoData.campo);
+secao.append(cartaoData);
+    
   // RESUMO NUTRICIONAL
-
-  const consumos = listarConsumos(semanaInicio);
 
   const totais = {
     kcal: 0,
@@ -1944,9 +1968,7 @@ function renderizarConsumo() {
     criarElemento(
       "p",
       "subtitulo",
-      semanaAtiva
-        ? "Semana: " + semanaAtiva.nome
-        : "Consumo da semana atual"
+      "Dia: " + new Date(dataConsulta + "T12:00:00").toLocaleDateString("pt-BR")
     )
   );
 
@@ -2191,7 +2213,7 @@ function renderizarConsumo() {
   // HISTÓRICO
 
   secao.append(
-    criarElemento("h3", "", "Histórico de consumo da semana")
+    criarElemento("h3", "", "Histórico de consumo do dia")
   );
 
   const lista = criarElemento("div", "lista-cadastros");
@@ -2201,7 +2223,7 @@ function renderizarConsumo() {
       criarElemento(
         "div",
         "texto-vazio",
-        "Nenhum consumo registrado nesta semana. Comece adicionando sua primeira refeição! ♡"
+        ""Nenhum consumo registrado neste dia. Comece adicionando sua primeira refeição! ♡""
       )
     );
   }
